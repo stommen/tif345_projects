@@ -25,107 +25,25 @@ Oscar Stommendal\\
 }
 \date{\today}
 \maketitle
-This is a course on \textit{Advanced Simulation and Machine Learning}. Although it
-is a physics course, it has an obvious focus on statistics, i.e., inference,
-optimization, parameter estimation, etc. It is therefore important that you discuss
-your findings and demonstrate your ability to use appropriate terminology to
-describe the employed statistical, analytical, and computational methodologies.\\
-Please refer to the respective project documents for additional instructions.
-\section{Some recommendations}
-You can use this document as a starting point for your report.
-It has been sensibly (from our perspective) configured and demonstrates some
-potentially useful packages.
-\subsection{Abbreviations}
-We recommend using the \texttt{glossaries} package for handling abbreviations.
-It will take care of making sure an abbreviation is introduced on its first
-occasion in the text.
-For example, the \gls{rmse} is ridiculously low but only if the \gls{rmse} is less
-than two elephants.
-\subsection{Units}
-We recommend using the \texttt{siunitx} package for handling units.
-For example, the Suez Canal measures \SI{193.3}{\kilo\meter}, a value that has been
-vetted by the scrupulous editors of Wikipedia.
-Believe it or not but the speed limit for scooters is \SI{20}{\kilo\meter\per\hour}
-according to \href{https://scotsman.me/post/what-s-the-law-on-riding-a-scooter-in-
-sweden}{this webpage}.
-Sometimes you might also just want to denote a unit in its full glory, such as
-\si{\nano\meter\squared}.
-\section{General instructions}
-The following points are based on the experience in previous years.
-We assume that all of you are familiar with these aspects but it is useful to keep
-them in mind when writing the reports.
-\subsection{Units}
-\begin{itemize}
-\item
-All numbers must be reported with proper units.
-\item
-Please note that if you choose to standardize the target data (e.g., the mixing
-energies that are originally in \si{\milli\electronvolt\per\atom} in project 2a)
-this unit changes upon standardization.
-This must be corrected for afterwards to obtain a \gls{rmse} that can be
-compared to the original data in a meaningful way.
-\item
-Check your units and target data.
-If the \gls{mse} is of the order of the variance of the target data, the model
-is not better than guessing.
-It is strongly recommended to use the same units as the data.
-\end{itemize}
-\subsection{Simulations in general}
-\begin{itemize}
-\item
-Clearly state how you choose your parameters.
-\end{itemize}
-\subsection{\texorpdfstring{\gls{mcmc}}{MCMC} simulations}
-A careful \gls{mcmc} simulation should contain the following for each class of
-parameters (model parameters and hyper-parameters):
-\begin{itemize}
-\item
-An illustration of the burn-in to motivate how much of the initial data to
-throw away.
-\item
-How the walkers were initialized.
-\item
-Some measure of the decoherence length (here the chain itself can be used but
-preferably an auto-correlation plot should be made).
-\item
-Some motivation of a successful total sampling, e.g., a histogram (it should at
-least be rather 'smooth') can be used for each parameter class.
-The \href{https://corner.readthedocs.io/}{\texttt{corner} package} can be a
-real boon for such tasks.
-\end{itemize}
-\subsection{Bayesian data analysis}
-\begin{itemize}
-\item
-Priors must be clearly stated, motivated and optionally illustrated in a
-figure.
-\item
-Motivate and declare your likelihood function. What are the statistical grounds
-for it?
-\item
-It is useful plot the posteriors.
-This can help you spot errors. A \texttt{corner} plot of the posterior is often
-useful to include in the report.
-\item Motivate your physical model/theory.
-\end{itemize}
-\subsection{Tables}
-\begin{itemize}
-\item
-Tables are useful for reporting/contrasting
-results.
-\end{itemize}
-\subsection{Figures}
-\begin{itemize}
-\item
-Figures must be reported in the correct units and have proper axis labels.
-It is insufficient to simply write ``RMSE'', ``CV'' etc.
-\item
-Please make sure that your figure are in sufficiently high resolution.
-Also keep in mind that if PDF is a vector format.
-This implies that if you generate a figure with a lot of dots (or other
-symbols) all these data survive even if the symbols overlap (as they typically do
-for example in a parity plot).
-In such a case, PDF files can become very large and unwieldy.
-Under such circumstances, a bitmap format, preferably PNG, is preferable if you
-make sure that the resolution is still sufficiently high.
-\end{itemize}
+\begin{center}
+    \textbf{Abstract}
+\end{center}
+\section{Introduction}
+Understanding the universe is one of the hardest and most fascinating challenges in modern science. Cosmology, the study of the universe as a whole, seeks to unravel the mysteries of its origin, evolution, and fate. In this project, we explore cosmological models using observational data from Type Ia supernovae to extract key cosmological parameters. By employing Bayesian statistical methods and Markov Chain Monte Carlo (MCMC) techniques, we aim to estimate parameters such as the Hubble constant ($H_0$) and the deceleration parameter ($q_0$). We also investigate different cosmological models and assess their fit to the data.
+\section{Theory}
+Supernovae of type Ia are considered standardizable candles in cosmology due to their consistent intrinsic brightness. By measuring their apparent brightness and redshift, we can infer distances and thus probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as follows:
+\begin{equation}
+\mu = m - M = 5 \log_{10}(d_L) + 25,
+\end{equation}
+where $d_L$ is the luminosity distance in megaparsecs (Mpc). The luminosity distance depends on the cosmological parameters and can be expressed in terms of the Hubble constant $H_0$ and the deceleration parameter $q_0$.
+\section{Methodology}
+The first task was to infer values on the Hubble constant $H_0$ and the deceleration parameter $q_0$ from the provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae. 
+
+For this purpose, we defined log prior, log likelihood, and log posterior functions. The prior distributions for $H_0$ and $q_0$ were chosen to be uniform within reasonable bounds based on prior knowledge from cosmological observations. We used $H_0 \in [30, 100]\,\si{\kilo\metre\per\second\per\mega\parsec}$ and $q_0 \in [-2, 2]$. For the unknown error variance parameter $s^2$, we used an inverse gamma prior with shape set to 1 and scale set to 0.1.
+
+The likelihood function was constructed assuming Gaussian errors on the observed distance moduli. 
+\section{Results}
+
+\section{Discussion and Conclusion}
+
 \end{document}
