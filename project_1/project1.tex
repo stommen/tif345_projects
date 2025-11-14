@@ -31,7 +31,7 @@ Oscar Stommendal\\
 \section{Introduction}
 Understanding the universe is one of the hardest and most fascinating challenges in modern science. Cosmology, the study of the universe as a whole, seeks to unravel the mysteries of its origin, evolution, and fate. In this project, we explore cosmological models using observational data from Type Ia supernovae to extract key cosmological parameters. By employing Bayesian statistical methods and Markov Chain Monte Carlo (MCMC) techniques, we aim to estimate parameters such as the Hubble constant ($H_0$) and the deceleration parameter ($q_0$). We also investigate different cosmological models and assess their fit to the data.
 \section{Theory}
-Supernovae of type Ia are considered standardizable candles in cosmology due to their consistent intrinsic brightness. By measuring their apparent brightness and redshift, we can infer distances and thus probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as follows:
+Supernovae of type Ia are considered standardizable candles in cosmology due to their consistent intrinsic brightness. By measuring their apparent brightness $F$ and redshift $z$, we can infer distances and thus probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as follows:
 \begin{equation}
 \mu = m - M = 5 \log_{10}(d_L) + 25,
 \end{equation}
@@ -41,11 +41,28 @@ In a flat universe, $d_L$ is given by
 \begin{equation}
     d_L(z) = c(1 + z) \int_{0}^{z} \frac{dz^\prime}{H(z^\prime)},
 \end{equation}
-where $H$ is the Hubble parameter and $c$ the speed of light. A flat universe means no spatial curvature on large distances, and the Friedmann equation can be reduced to
+where $H$ is the Hubble parameter and $c$ the speed of light. A flat universe means no spatial curvature on large distances, and the Friedmann equation (explaining how the expansion rate of the Universe depends on its energy content) can be expressed as
 \begin{equation}
     1 = \Omega_M + \Omega_k + \Omega_\Lambda = \Omega_M + \Omega_\Lambda,
 \end{equation}
-where $\Omega_M$, $\Omega_k$, and $\Omega_\Lambda$ are the matter parameter, curvature parameter, and cosmological constant respectively.
+where $\Omega_M$, $\Omega_k$, and $\Omega_\Lambda$ are the matter, curvature, and cosmological constant (dark energy) density parameters respectively. By normalizing the paramaters with present values (denoted by subscript '0'), one can get the reduced version of the so called $\Lambda$CDM cosmology
+\begin{equation}
+    H(z) = H_0 \sqrt{\Omega_{M,0}(1+z)^3 + \Omega_{\Lambda,0}} \equiv H_0\,E(z)^{1/2}.
+\end{equation}
+
+For $z << 1$ (generally accepted to be $z < 0.5$), Taylor expansion gives
+\begin{equation}
+    E(z) \approx \Omega_{M,0}(1+3z) + \Omega_{\Lambda,0} = 1 + 2z\,(q_0 + 1),
+\end{equation}
+where $q_0 = (\Omega_{M,0} - 2\Omega_{\Lambda,0})/2$ is called the deceleration parameter, showing if the Universal expansion is decelerating ($q_0>0$) or accelerating ($q_0<0$). In the small-$z$ domain, $d_L$ can also be rewritten as 
+\begin{equation}
+    d_L(z) = c(1+z)\int_{0}^{z}\frac{dz'}{H(z')} \approx \frac{c}{H_0}\left( z + \frac{1}{2}(1-q_0)z^2 + \dots \right).
+\end{equation}
+
+Other cosmologies can also be explored within the flat Universe. An extension to the flat $\Lambda$CDM is the so-called wCDM cosmology, which has the extra dark-energy equation-of-state parameter w, leading to a Hubble parameter corresponding to
+\begin{equation}
+    E(z) = \Omega_{M,0}(1+z)^3 + \Omega_{\Lambda,0}(1+z)^{3(1+w)}.
+\end{equation}
 
 \section{Methodology}
 The first task was to infer values on the Hubble constant $H_0$ and the deceleration parameter $q_0$ from the provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae. 
