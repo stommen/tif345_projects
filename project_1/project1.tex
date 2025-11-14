@@ -35,13 +35,25 @@ Supernovae of type Ia are considered standardizable candles in cosmology due to 
 \begin{equation}
 \mu = m - M = 5 \log_{10}(d_L) + 25,
 \end{equation}
-where $d_L$ is the luminosity distance in megaparsecs (Mpc). The luminosity distance depends on the cosmological parameters and can be expressed in terms of the Hubble constant $H_0$ and the deceleration parameter $q_0$.
+where $d_L$ is the luminosity distance in megaparsecs (Mpc).
+
+In a flat universe, $d_L$ is given by
+\begin{equation}
+    d_L(z) = c(1 + z) \int_{0}^{z} \frac{dz^\prime}{H(z^\prime)},
+\end{equation}
+where $H$ is the Hubble parameter and $c$ the speed of light. A flat universe means no spatial curvature on large distances, and the Friedmann equation can be reduced to
+\begin{equation}
+    1 = \Omega_M + \Omega_k + \Omega_\Lambda = \Omega_M + \Omega_\Lambda,
+\end{equation}
+where $\Omega_M$, $\Omega_k$, and $\Omega_\Lambda$ are the matter parameter, curvature parameter, and cosmological constant respectively.
+
 \section{Methodology}
 The first task was to infer values on the Hubble constant $H_0$ and the deceleration parameter $q_0$ from the provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae. 
 
 For this purpose, we defined log prior, log likelihood, and log posterior functions. The prior distributions for $H_0$ and $q_0$ were chosen to be uniform within reasonable bounds based on prior knowledge from cosmological observations. We used $H_0 \in [30, 100]\,\si{\kilo\metre\per\second\per\mega\parsec}$ and $q_0 \in [-2, 2]$. For the unknown error variance parameter $s^2$, we used an inverse gamma prior with shape set to 1 and scale set to 0.1.
 
 The likelihood function was constructed assuming Gaussian errors on the observed distance moduli. 
+
 \section{Results}
 
 \section{Discussion and Conclusion}
