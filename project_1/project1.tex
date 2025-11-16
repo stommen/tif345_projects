@@ -32,12 +32,10 @@ Oscar Stommendal\\
 Understanding the universe is one of the hardest and most fascinating challenges in modern science. Cosmology, the study of the universe as a whole, seeks to unravel the mysteries of its origin, evolution, and fate. In this project, we explore cosmological models using observational data from Type Ia supernovae to extract key cosmological parameters. By employing Bayesian statistical methods and Markov Chain Monte Carlo (MCMC) techniques, we aim to estimate parameters such as the Hubble constant ($H_0$) and the deceleration parameter ($q_0$). We also investigate different cosmological models and assess their fit to the data.
 \section{Theory}
 Supernovae of type Ia are considered standardizable candles in cosmology due to their consistent intrinsic brightness. By measuring their apparent brightness $F$ and redshift $z$, we can infer distances and thus probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as follows:
-\begin{equation}
+\begin{equation}\label{d_L}
 \mu = m - M = 5 \log_{10}(d_L) + 25,
 \end{equation}
-where $d_L$ is the luminosity distance in megaparsecs (Mpc).
-
-In a flat universe, $d_L$ is given by
+where $d_L$ is the luminosity distance in megaparsecs (Mpc). In a flat universe, $d_L$ is given by
 \begin{equation}
     d_L(z) = c(1 + z) \int_{0}^{z} \frac{dz^\prime}{H(z^\prime)},
 \end{equation}
@@ -55,7 +53,7 @@ For $z << 1$ (generally accepted to be $z < 0.5$), Taylor expansion gives
     E(z) \approx \Omega_{M,0}(1+3z) + \Omega_{\Lambda,0} = 1 + 2z\,(q_0 + 1),
 \end{equation}
 where $q_0 = (\Omega_{M,0} - 2\Omega_{\Lambda,0})/2$ is called the deceleration parameter, showing if the Universal expansion is decelerating ($q_0>0$) or accelerating ($q_0<0$). In the small-$z$ domain, $d_L$ can also be rewritten as 
-\begin{equation}
+\begin{equation}\label{small_z}
     d_L(z) = c(1+z)\int_{0}^{z}\frac{dz'}{H(z')} \approx \frac{c}{H_0}\left( z + \frac{1}{2}(1-q_0)z^2 + \dots \right).
 \end{equation}
 
@@ -65,14 +63,45 @@ Other cosmologies can also be explored within the flat Universe. An extension to
 \end{equation}
 
 \section{Methodology}
-The first task was to infer values on the Hubble constant $H_0$ and the deceleration parameter $q_0$ from the provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae. 
+The first task was to infer values on the Hubble constant $H_0$ and the deceleration parameter $q_0$ from provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae \cite{SCPwebsite}. For the given purpose, log prior, log likelihood, and log posterior functions were defined. The prior distributions for $H_0$ and $q_0$ were chosen to be uniform within reasonable bounds based on prior knowledge from cosmological observations. We used $H_0 \in [30, 100]\,\si{\kilo\metre\per\second\per\mega\parsec}$ and $q_0 \in [-2, 2]$. For the unknown error variance parameter $s^2$, we used an inverse gamma prior with shape set to 1 and scale set to 1.
 
-For this purpose, we defined log prior, log likelihood, and log posterior functions. The prior distributions for $H_0$ and $q_0$ were chosen to be uniform within reasonable bounds based on prior knowledge from cosmological observations. We used $H_0 \in [30, 100]\,\si{\kilo\metre\per\second\per\mega\parsec}$ and $q_0 \in [-2, 2]$. For the unknown error variance parameter $s^2$, we used an inverse gamma prior with shape set to 1 and scale set to 0.1.
+The likelihood function was constructed assuming Gaussian errors on the observed distance moduli,
+\begin{equation}
+    \ln \mathcal{L}(\mu_{\text{obs}} | H_0, q_0, s^2) = -\frac{1}{2} \sum_{i} \left[ \frac{(\mu_{\text{obs},i} - \mu_{\text{model},i})^2}{\sigma_{\mu,i}^2s^2} + \ln(2\pi\sigma_{\mu,i}^2s^2) \right],
+\end{equation}
+where $\mu_{\text{model},i}$ is the model-predicted distance modulus from equation \ref{d_L} for the $i$-th supernova given parameters $H_0$ and $q_0$, and $\sigma_{\mu,i}$ is the observational uncertainty. To calculate $d_L$ using parameters $H_0$ and $q_0$, equation \ref{small_z} up to second order was used, as we only considered supernovae with $z < 0.5$. Following Bayes' theorem, the log posterior is given by the sum of the log prior and log likelihood.
 
-The likelihood function was constructed assuming Gaussian errors on the observed distance moduli. 
+To sample the posterior distribution, the Markov Chain Monte Carlo (MCMC) method was employed using the \texttt{emcee} package \cite{emcee}. 50 walkers were initialized randomly within the prior bounds and run for 5000 iterations, discarding the first 1000 iterations as burn-in. Convergence was assessed by visually inspecting trace plots. After obtaining the MCMC samples, posterior distributions for $H_0$ and $q_0$, together with the unknown error variance parameter $s^2$, were analyzed. Using the \texttt{corner} Python package, corner plots were created to visualize the joint and marginal posterior distributions of the parameters \cite{corner}. 
+
+In addition to the posterior analysis, posterior predictive checks were performed to assess the model fit. Using the posterior samples, predicted distance moduli $\mu_{\text{model}}$ were generated across a range of redshift values and compared to the observed data. The median and credible intervals of the predicted distance moduli were plotted alongside the observed data to visually evaluate the model's performance.
+
+The second part of the project focused on comparing the flat $\Lambda$CDM and wCDM cosmological models.  
 
 \section{Results}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{figs/post_samples_H0_q0_sigma2.png}
+    \caption{Corner plot showing the posterior distributions and correlations between the parameters $H_0$, $q_0$, and $\sigma_{\mathrm{sys}}^2$. The histograms on the diagonal represent the marginal distributions for each parameter, while the off-diagonal plots show the joint distributions.}
+    \label{fig:corner_plot}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{figs/mu_model_pred.pdf}
+    \caption{Posterior predictive check showing the observed distance moduli (red points) with error bars and the model median (black line) as a function of redshift $z$.}
+    \label{fig:posterior_predictive}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.65\textwidth]{figs/Om_marginal_posterior.pdf}
+    \caption{Marginal posterior distribution of the matter density parameter $\Omega_{M,0}$ under the wCDM model.}
+    \label{fig:Om_marginal_posterior}
+\end{figure}
+
 \section{Discussion and Conclusion}
+
+\printbibliography
 
 \end{document}
