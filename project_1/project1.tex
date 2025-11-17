@@ -7,7 +7,7 @@
 \lstset{language=Python}
 \title{
 \sffamily
-{\huge\textbf{Report on Project 1}} \\
+{\Huge\textbf{Report on Project 1}} \\
 Cosmological Models
 }
 \author{
@@ -25,13 +25,15 @@ Oscar Stommendal\\
 }
 \date{\today}
 \maketitle
-\begin{center}
-    \textbf{Abstract}
-\end{center}
+% \begin{center}
+%     \textbf{Abstract}
+% \end{center}
+\vspace{-1.5cm}
 \section{Introduction}
 Understanding the universe is one of the hardest and most fascinating challenges in modern science. Cosmology, the study of the universe as a whole, seeks to unravel the mysteries of its origin, evolution, and fate. In this project, we explore cosmological models using observational data from Type Ia supernovae to extract key cosmological parameters. By employing Bayesian statistical methods and Markov Chain Monte Carlo (MCMC) techniques, we aim to estimate parameters such as the Hubble constant ($H_0$) and the deceleration parameter ($q_0$). We also investigate different cosmological models and assess their fit to the data.
+\vspace{-0.5cm}
 \section{Theory}
-Supernovae of type Ia are considered standardizable candles in cosmology due to their consistent intrinsic brightness. By measuring their apparent brightness $F$ and redshift $z$, we can infer distances and thus probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as follows:
+Type Ia Supernovae are considered standardizable candles in cosmology due to their consistent brightness. By measuring their apparent brightness and redshift $z$, we can infer distances and probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as:
 \begin{equation}\label{d_L}
 \mu = m - M = 5 \log_{10}(d_L) + 25,
 \end{equation}
@@ -43,8 +45,8 @@ where $H$ is the Hubble parameter and $c$ the speed of light. A flat universe me
 \begin{equation}
     1 = \Omega_M + \Omega_k + \Omega_\Lambda = \Omega_M + \Omega_\Lambda,
 \end{equation}
-where $\Omega_M$, $\Omega_k$, and $\Omega_\Lambda$ are the matter, curvature, and cosmological constant (dark energy) density parameters respectively. By normalizing the paramaters with present values (denoted by subscript '0'), one can get the reduced version of the so called $\Lambda$CDM cosmology
-\begin{equation}
+where $\Omega_M$, $\Omega_k$, and $\Omega_\Lambda$ are the matter, curvature, and cosmological constant (dark energy) density parameters respectively. By normalizing these with present values (subscript 0), one can get the reduced version of the so called $\Lambda$CDM cosmology
+\begin{equation}\label{lCDM}
     H(z) = H_0 \sqrt{\Omega_{M,0}(1+z)^3 + \Omega_{\Lambda,0}} \equiv H_0\,E(z)^{1/2}.
 \end{equation}
 
@@ -58,48 +60,69 @@ where $q_0 = (\Omega_{M,0} - 2\Omega_{\Lambda,0})/2$ is called the deceleration 
 \end{equation}
 
 Other cosmologies can also be explored within the flat Universe. An extension to the flat $\Lambda$CDM is the so-called wCDM cosmology, which has the extra dark-energy equation-of-state parameter w, leading to a Hubble parameter corresponding to
-\begin{equation}
+\begin{equation}\label{wCDM}
     E(z) = \Omega_{M,0}(1+z)^3 + \Omega_{\Lambda,0}(1+z)^{3(1+w)}.
 \end{equation}
-
+\vspace{-0.5cm}
 \section{Methodology}
 The first task was to infer values on the Hubble constant $H_0$ and the deceleration parameter $q_0$ from provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae \cite{SCPwebsite}. For the given purpose, log prior, log likelihood, and log posterior functions were defined. The prior distributions for $H_0$ and $q_0$ were chosen to be uniform within reasonable bounds based on prior knowledge from cosmological observations. We used $H_0 \in [30, 100]\,\si{\kilo\metre\per\second\per\mega\parsec}$ and $q_0 \in [-2, 2]$. For the unknown error variance parameter $s^2$, we used an inverse gamma prior with shape set to 1 and scale set to 1.
 
-The likelihood function was constructed assuming Gaussian errors on the observed distance moduli,
+The likelihood function was constructed assuming Gaussian errors on the observed $\mu$,
 \begin{equation}
     \ln \mathcal{L}(\mu_{\text{obs}} | H_0, q_0, s^2) = -\frac{1}{2} \sum_{i} \left[ \frac{(\mu_{\text{obs},i} - \mu_{\text{model},i})^2}{\sigma_{\mu,i}^2s^2} + \ln(2\pi\sigma_{\mu,i}^2s^2) \right],
 \end{equation}
-where $\mu_{\text{model},i}$ is the model-predicted distance modulus from equation \ref{d_L} for the $i$-th supernova given parameters $H_0$ and $q_0$, and $\sigma_{\mu,i}$ is the observational uncertainty. To calculate $d_L$ using parameters $H_0$ and $q_0$, equation \ref{small_z} up to second order was used, as we only considered supernovae with $z < 0.5$. Following Bayes' theorem, the log posterior is given by the sum of the log prior and log likelihood.
+where $\mu_{\text{model},i}$ is the model-predicted distance modulus from equation \ref{d_L} for the $i$-th supernova given parameters $H_0$ and $q_0$, and $\sigma_{\mu,i}$ is the observational uncertainty. To calculate $d_L$ using parameters $H_0$ and $q_0$, Eq. \ref{small_z} up to second order was used, as we only considered supernovae with $z < 0.5$. Following Bayes' theorem, the log posterior is given by the sum of the log prior and log likelihood.
 
 To sample the posterior distribution, the Markov Chain Monte Carlo (MCMC) method was employed using the \texttt{emcee} package \cite{emcee}. 50 walkers were initialized randomly within the prior bounds and run for 5000 iterations, discarding the first 1000 iterations as burn-in. Convergence was assessed by visually inspecting trace plots. After obtaining the MCMC samples, posterior distributions for $H_0$ and $q_0$, together with the unknown error variance parameter $s^2$, were analyzed. Using the \texttt{corner} Python package, corner plots were created to visualize the joint and marginal posterior distributions of the parameters \cite{corner}. 
 
-In addition to the posterior analysis, posterior predictive checks were performed to assess the model fit. Using the posterior samples, predicted distance moduli $\mu_{\text{model}}$ were generated across a range of redshift values and compared to the observed data. The median and credible intervals of the predicted distance moduli were plotted alongside the observed data to visually evaluate the model's performance.
+In addition to the posterior analysis, posterior predictive checks were performed to assess the model fit. Using the posterior samples and Eq. \ref{d_L} and \ref{small_z}, predicted distance moduli $\mu_{\text{model}}$ were generated across the original range of redshift values $z \in [0.1, 1.5]$, i.e., not only for small $z$, and compared to the observed data. The median of the predicted distance moduli was plotted alongside the observed data in order to visually evaluate the model's performance.
 
-The second part of the project focused on comparing the flat $\Lambda$CDM and wCDM cosmological models.  
+The second part of the project focused on comparing the $\Lambda$CDM and wCDM cosmological models defined by the expressions for $H(z)$ in Eq. \ref{lCDM} and \ref{wCDM}. Due to the increased complexity when considering the full redshift range in Eq. \ref{small_z}, the models were compared using AIC and BIC scores. The log-likelihood function was modified to account for the whole redshift range, using the \texttt{scipy} package to perform the necessary numerical integration for $d_L(z)$ in Eq. \ref{small_z} \cite{2020SciPy-NMeth}. The same package was used to optimize the log-likelihood function for both models, yielding maximum log-likelihood estimates for the parameters. The AIC and BIC scores were then calculated using the formulas
+\begin{align}
+    \text{AIC} &= 2\ln(\mathcal{L}^\star) - 2k \\
+    \text{BIC} &= 2\ln(\mathcal{L}^\star) - k \ln(N),
+\end{align}
+where $k$ is the number of parameters in the model, $N$ is the number of data points, and $\mathcal{L}^\star$ is the maximum value of the likelihood function. The model with the lower AIC and BIC scores was considered to have a better balance between goodness-of-fit and model complexity. In this case, we assumed that the overall variance was known and equal to the sample variance of the observed distance moduli. From the maximum likelihood estimates, we also derived the matter and dark energy density parameters $\Omega_{M,0}$ and $\Omega_{\Lambda,0}$ for both models. 
 
+Finally, MCMC sampling was performed for the $\Lambda$CDM model to obtain the posterior distribution of $\Omega_{M,0}$. The same MCMC setup as before was used, however this time using 10 walkers and 1\,100 iterations due to the increased complexity, discarding the first 100 as burn-in. As above, we also considered the overall variance scale known in this case. For $H_0$, we fixed its value at 70 \si{\kilo\metre\per\second\per\mega\parsec}, and for $\Omega_{M,0}$, we used a uniform prior with values $\Omega_{M,0} \in [0, 1]$. The posterior samples were analyzed to derive credible intervals and visualize the marginal posterior distribution of $\Omega_{M,0}$.
+\vspace{-0.5cm}
 \section{Results}
+Below we present the results obtained in the analysis of the supernova data using the Bayesian framework and MCMC sampling, as well as the model comparison between $\Lambda$CDM and wCDM cosmologies. Firstly, Fig. \ref{fig:corner_plot} shows ...
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.99\textwidth, trim={0.2cm 0.1cm 0.2cm 0.1cm}, clip]{figs/post_samples_H0_q0_sigma2.png}
+%     \caption{Left: Corner plot showing the posterior distributions and correlations between the parameters $H_0$, $q_0$, and $\sigma_{\mathrm{sys}}^2$. The histograms on the diagonal represent the marginal distributions for each parameter, while the off-diagonal plots show the joint distributions. Right: Trace plots for the MCMC chains of each parameter, indicating good mixing and convergence.}
+%     \label{fig:corner_plot}
+% \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.99\textwidth]{figs/post_samples_H0_q0_sigma2.png}
-    \caption{Corner plot showing the posterior distributions and correlations between the parameters $H_0$, $q_0$, and $\sigma_{\mathrm{sys}}^2$. The histograms on the diagonal represent the marginal distributions for each parameter, while the off-diagonal plots show the joint distributions.}
-    \label{fig:corner_plot}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.65\textwidth]{figs/mu_model_pred.pdf}
+    \includegraphics[width=0.6\textwidth]{figs/mu_model_pred.pdf}
+    \vspace{-0.4cm}
     \caption{Posterior predictive check showing the observed distance moduli (red points) with error bars and the model median (black line) as a function of redshift $z$.}
     \label{fig:posterior_predictive}
 \end{figure}
 
+\begin{table}[H]
+    \centering
+    \caption{AIC and BIC scores for the $\Lambda$CDM and wCDM models, along with the maximum likelihood estimates of $H_0$, $\Omega_{M,0}$, $\Omega_{\Lambda,0}$, and $w$.}
+    \vspace{0.2cm}
+    \begin{tabular}{l|c|c|c|c|c|c}
+        \textbf{Model} & \textbf{AIC} & \textbf{BIC} & $\bf{H_0}$ (\si{\kilo\metre\per\second\per\mega\parsec}) & $\bf{\Omega_{M,0}}$ & $\bf{\Omega_{\Lambda,0}}$ & $\bf{w}$ \\ \toprule
+        $\Lambda$CDM & 233.5 & 224.8 & 70.0 & 0.278 & 0.722 & -- \\
+        wCDM & 231.5 & 218.4 & 70.0 & 0.281 & 0.719 & --1.01 \\ \bottomrule
+    \end{tabular}
+\end{table}
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.65\textwidth]{figs/Om_marginal_posterior.pdf}
-    \caption{Marginal posterior distribution of the matter density parameter $\Omega_{M,0}$ under the wCDM model.}
+    \includegraphics[width=0.99\textwidth]{figs/post_samples_Om_LCDM.png}
+    \vspace{-0.4cm}
+    \caption{Left: Marginal posterior distribution of $\Omega_{M,0}$ under the $\Lambda$CDM model. The thick dashed line indicate the mean value, while the dotted lines represent 1$\sigma$ credible intervals. Right: Trace plot for the MCMC chain of $\Omega_{M,0}$.}
     \label{fig:Om_marginal_posterior}
 \end{figure}
-
+\vspace{-0.5cm}
 \section{Discussion and Conclusion}
 
 \printbibliography
