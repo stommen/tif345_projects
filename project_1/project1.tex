@@ -34,7 +34,7 @@ Oscar Stommendal\\
 Understanding the universe is one of the hardest and most fascinating challenges in modern science. Cosmology, the study of the universe as a whole, seeks to unravel the mysteries of its origin, evolution, and fate. In this project, we explore cosmological models using observational data from Type Ia supernovae to extract key cosmological parameters. By employing Bayesian statistical methods and Markov Chain Monte Carlo (MCMC) techniques, we aim to estimate parameters such as the Hubble constant ($H_0$) and the deceleration parameter ($q_0$). We also investigate different cosmological models and assess their fit to the data.
 \vspace{-0.5cm}
 \section{Theory}
-Type Ia Supernovae are considered standardizable candles in cosmology due to their consistent brightness. By measuring their apparent brightness and redshift $z$, we can infer distances and probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as:
+Type Ia Supernovae are considered standardizable candles in cosmology due to their consistent brightness \cite{projpdf}. By measuring their apparent brightness and redshift $z$, we can infer distances and probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as:
 \begin{equation}\label{d_L}
 \mu = m - M = 5 \log_{10}(d_L) + 25,
 \end{equation}
@@ -135,6 +135,15 @@ The marginal posterior for $\Omega_{M,0}$ under flat $\Lambda$CDM (known measure
 \end{figure}
 \vspace{-1.2cm}
 \section{Discussion and Conclusion}
+The corner plot shows an accelerating universe with a decisively negative $q_0$ (median $-0.419$). The estimate for $H_0$ is $69.79~\mathrm{km\,s^{-1}\,Mpc^{-1}}$, which is in the expected $\sim 70$ range, and the variance scale is close to unity ($\sigma^2=0.968$), which supports the overall calibration of the uncertainties. A very-low-$z$ Hubble-law check gives $H_0 = 68.31 \pm 5.75~\mathrm{km\,s^{-1}\,Mpc^{-1}}$. This agrees with the small-$z$ posterior and the larger error bar is consistent with peculiar-velocity scatter and the omission of the quadratic term in that limit.
+
+The Hubble diagram behaves as expected. The second-order small-$z$ model $\mu(z; H_0, q_0)$ tracks the data well for $z\lesssim 0.5$ and shows the gentle upward curvature implied by $q_0<0$. At higher redshift the approximation starts to miss structure in the data, which is natural once the series is pushed beyond its intended range.
+
+Over the full redshift range, the best-fit matter densities are $\Omega_{M,0}=0.278$ for flat $\Lambda$CDM and $0.281$ for flat wCDM. These values essentially match the Supernova Cosmology Project results for the same dataset reported by Suzuki et al.\ ($0.277$ and $0.281$), which indicates that the distance–redshift model, weighting, and optimizer are behaving as intended for central estimates. With $w\simeq -1$, wCDM offers no meaningful improvement over $\Lambda$CDM. The information criteria therefore prefer the simpler model, as the slight increase in fit is offset by the complexity penalty, helping to avoid overfitting.
+
+-Write about how to improve inference for $q_0$ and $H_0$.
+-Write somethign about final figure?
+
 
 \printbibliography
 
