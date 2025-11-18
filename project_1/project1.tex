@@ -7,10 +7,11 @@
 \lstset{language=Python}
 \title{
 \sffamily
-\vspace{-2.5cm}
-{\huge\textbf{Project 1 -- Cosmological Models}} \\
+\vspace{-1.7cm}
+{\huge\textbf{Project 1 -- Cosmological Models}} \\[-0.4cm]
 }
 \author{
+    \vspace{-0.4cm}
     \begin{minipage}[t]{0.45\textwidth}
 \centering
 Linus Brink\\
@@ -65,7 +66,7 @@ The likelihood function was constructed assuming Gaussian errors on the observed
 \end{equation}
 where $\mu_{\text{model},i}$ is the model-predicted distance modulus from equation \ref{d_L} for the $i$-th supernova given parameters $H_0$ and $q_0$, and $\sigma_{\mu,i}$ is the observational uncertainty. To calculate $d_L$ using parameters $H_0$ and $q_0$, Eq. \ref{small_z} up to second order was used, as we only considered supernovae with $z < 0.5$. Following Bayes' theorem, the log posterior is then given by the sum of the log prior and log likelihood.
 
-To sample the posterior distribution, Markov Chain Monte Carlo (MCMC) was employed using the \texttt{emcee} package \cite{emcee}. 50 walkers were initialized randomly within the prior bounds and run for 6000 iterations, discarding the first 1000 iterations as burn-in. Convergence was assessed by visually inspecting trace plots. After sampling, posterior distributions for $H_0$, $q_0$, and $s^2$, were analyzed. Corner plots using the \texttt{corner} package were created to visualize the joint and marginal posterior distributions of the parameters \cite{corner}. In addition to the posterior analysis, posterior predictive checks were performed to assess the model fit. Using the posterior samples and Eq. \ref{d_L} and \ref{small_z}, predicted distance moduli $\mu_{\text{model}}$ were generated across the original range of redshift values $z \in [0.1, 1.5]$, i.e., not only for small $z$, and compared to the observed data. %The median of the predicted distance moduli was plotted alongside the observed data in order to visually evaluate the model's performance.
+To sample the posterior distribution, Markov Chain Monte Carlo (MCMC) was employed using the \texttt{emcee} package \cite{emcee}. 100 walkers were initialized randomly within the prior bounds and run for 6000 iterations, discarding the first 1000 iterations as burn-in. Convergence was assessed by visually inspecting trace plots. After sampling, posterior distributions for $H_0$, $q_0$, and $s^2$, were analyzed. Corner plots using the \texttt{corner} package were created to visualize the joint and marginal posterior distributions of the parameters \cite{corner}. In addition to the posterior analysis, posterior predictive checks were performed to assess the model fit. Using the posterior samples and Eq. \ref{d_L} and \ref{small_z}, predicted distance moduli $\mu_{\text{model}}$ were generated across the original range of redshift values $z \in [0.1, 1.5]$, i.e., not only for small $z$, and compared to the observed data. %The median of the predicted distance moduli was plotted alongside the observed data in order to visually evaluate the model's performance.
 
 The second part of the project focused on comparing the $\Lambda$CDM and wCDM cosmological models defined by the expressions for $H(z)$ in Eq. \ref{lCDM} and \ref{wCDM}. Due to the increased complexity when considering the full redshift range in Eq. \ref{small_z}, the models were compared using AIC and BIC scores. The log-likelihood function was modified to account for the whole redshift range, using the \texttt{scipy} package to perform the necessary numerical integration for $d_\mathrm{L}(z)$ in Eq. \ref{small_z} \cite{2020SciPy-NMeth}. The same package was used to optimize the log-likelihood function for both models, yielding maximum log-likelihood estimates for the parameters. The AIC and BIC scores were then calculated using the formulas
 \begin{align}
@@ -77,11 +78,11 @@ where $k$ is the number of model parameters, $N$ the number of data points, and 
 Finally, MCMC sampling was performed for the $\Lambda$CDM model to obtain the posterior distribution of $\Omega_{\mathrm{M},0}$. The same MCMC setup as before was used, however this time using 10 walkers and 1\,100 iterations due to the increased complexity, discarding the first 100 as burn-in. As above, we also considered the overall variance scale known in this case. For $H_0$, we fixed its value at 70 \si{\kilo\metre\per\second\per\mega\parsec}, and for $\Omega_{\mathrm{M},0}$, we used a uniform prior with values $\Omega_{\mathrm{M},0} \in [0, 1]$. The posterior samples were analyzed to derive credible intervals and visualize the marginal posterior distribution of $\Omega_{M,0}$.
 \vspace{-0.5cm}
 \section{Results}
-Fig.~\ref{fig:corner_plot} shows the joint and marginal posteriors for $H_0$, $q_0$, and $\sigma_\mathrm{sys}^2$, together with corresponding trace panels. The diagonal marginals are close to Gaussian, with posterior medians and 68\% credible intervals $H_0 = 69.79^{+0.42}_{-0.41}\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$, $q_0 = -0.419^{+0.068}_{-0.070}$, and $\sigma_\mathrm{sys}^2 = 0.968^{+0.034}_{-0.032}$. The negative $q_0$ indicates accelerated expansion, and a $\sigma_\mathrm{sys}^{2}$ near unity indicates that the quoted uncertainties require no overall rescaling. The contours reveal a clear negative correlation between $H_0$ and $q_0$ (meaning that as $H_0$ increases, we have a stronger present-day cosmic acceleration, i.e., lower $q_0$) and only weak coupling of $\sigma_\mathrm{sys}^2$ to the other parameters. The trace panels are stationary and show rapid mixing, consistent with adequate burn-in removal and stable sampling.
+Fig.~\ref{fig:corner_plot} shows the joint and marginal posteriors for $H_0$, $q_0$, and $\sigma_\mathrm{sys}^2$, together with corresponding trace panels. The diagonal marginals are close to Gaussian, with posterior medians and 68\% credible intervals $H_0 = 69.79^{+0.42}_{-0.41}\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$, $q_0 = -0.419^{+0.069}_{-0.070}$, and $\sigma_\mathrm{sys}^2 = 0.940^{+0.067}_{-0.062}$. The negative $q_0$ indicates accelerated expansion, and a $\sigma_\mathrm{sys}^{2}$ near unity indicates that the quoted uncertainties require no overall rescaling. The contours reveal a clear negative correlation between $H_0$ and $q_0$ (meaning that as $H_0$ increases, we have a stronger present-day cosmic acceleration, i.e., lower $q_0$) and only weak coupling of $\sigma_\mathrm{sys}^2$ to the other parameters. The trace panels are stationary and show rapid mixing, consistent with adequate burn-in removal and stable sampling.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth, trim={0.2cm 0.1cm 0.2cm 0.1cm}, clip]{figs/post_samples_H0_q0_sigma2.png}
+    \includegraphics[width=\textwidth, trim={0.2cm 0.1cm 0.2cm 0.1cm}, clip]{figs/post_samples_H0_q0_sigma2.pdf}
     \vspace{-0.1cm}
     \caption{Left: Corner plot showing the posterior distributions and correlations between $H_0$, $q_0$, and $\sigma_{\mathrm{sys}}^2$. The histograms on the diagonal represent the marginal distributions, while the off-diagonal plots show the joint distributions. Right: Trace plots for the MCMC chains of each parameter.}
     \label{fig:corner_plot}
@@ -122,7 +123,7 @@ The marginal posterior for $\Omega_{\mathrm{M},0}$ under flat $\Lambda$CDM (know
 \end{figure}
 \vspace{-1.2cm}
 \section{Discussion}
-Earlier measurements place $H_0$ near $70~\mathrm{km\,s^{-1}\,Mpc^{-1}}$ \cite{expvalue_H0} and $q_0$ around $-0.6\pm0.2$ \cite{expvalue_q0}, consistent with the corner-plot estimates. A very-low-$z$ ($z<0.05$) Hubble-law check gives $H_0 = 68.31 \pm 5.75~\mathrm{km\,s^{-1}\,Mpc^{-1}}$, supporting the distance-modulus calibration and the $H_0$ extraction. Together with $\sigma_\mathrm{sys}^{2}\approx 1$ and the decisively negative $q_0$, this provides robust evidence for acceleration.
+Earlier measurements place $H_0$ near $70~\mathrm{km\,s^{-1}\,Mpc^{-1}}$ \cite{expvalue_H0} and $q_0$ around $-0.6\pm0.2$ \cite{expvalue_q0}, consistent with the corner-plot estimates. A small-$z$ ($z<0.05$) Hubble-law check by discarding the second order term in Eq. \ref{small_z} gives $H_0 = 68.31 \pm 5.75~\mathrm{km\,s^{-1}\,Mpc^{-1}}$, supporting the distance-modulus calibration and the $H_0$ extraction. Together with $\sigma_\mathrm{sys}^{2}\approx 1$ and the decisively negative $q_0$, this provides robust evidence for acceleration.
 
 The Hubble diagram confirms the small-$z$ approximation’s scope, with good agreement for $z\lesssim 0.5$ and expected drift at higher $z$. A single full-$z$ fit is therefore the natural next step. Using the full luminosity–distance integral with a redshift-aware noise model (intrinsic scatter or Student-$t$, a low-$z$ velocity floor, and propagated systematics) would sharpen $q_0$ by using curvature in $\mu(z)$ and tighten $H_0$ once a distance anchor is included, which should improve inference for both parameters.
 
