@@ -8,8 +8,7 @@
 \title{
 \sffamily
 \vspace{-2.5cm}
-{\Huge\textbf{Report on Project 1}} \\
-Cosmological Models
+{\huge\textbf{Project 1 -- Cosmological Models}} \\
 }
 \author{
     \begin{minipage}[t]{0.45\textwidth}
@@ -31,31 +30,23 @@ Oscar Stommendal\\
 % \end{center}
 \vspace{-1.5cm}
 \section{Introduction}
-Understanding the universe is one of the hardest and most fascinating challenges in modern science. Cosmology, the study of the universe as a whole, seeks to unravel the mysteries of its origin, evolution, and fate. In this project, we explore cosmological models using observational data from Type Ia supernovae to extract key cosmological parameters. By employing Bayesian statistical methods and Markov Chain Monte Carlo (MCMC) techniques, we aim to estimate parameters such as the Hubble constant ($H_0$) and the deceleration parameter ($q_0$). We also investigate different cosmological models and assess their fit to the data.
+Understanding the universe is one of the most fascinating challenges in science. Cosmology, the study of the universe as a whole, seeks to solve the mysteries of its origin, evolution, and fate. In this project, we explore cosmological models using observational supernovae data to extract key cosmological parameters such as the Hubble constant $H_0$ and the deceleration parameter $q_0$. We also investigate different cosmological models and assess their fit to the data.
 \vspace{-0.5cm}
 \section{Theory}
-Type Ia Supernovae are considered standardizable candles in cosmology due to their consistent brightness \cite{projpdf}. By measuring their apparent brightness and redshift $z$, we can infer distances and probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova as:
+Type Ia Supernovae are considered standardizable candles in cosmology due to their consistent brightness \cite{projpdf}. By measuring their apparent brightness and redshift $z$, we can infer distances and probe the expansion history of the universe. The distance modulus $\mu$ relates the apparent magnitude $m$ and absolute magnitude $M$ of a supernova,
 \begin{equation}\label{d_L}
 \mu = m - M = 5 \log_{10}(d_L) + 25,
 \end{equation}
-where $d_L$ is the luminosity distance in megaparsecs (Mpc). In a flat universe, $d_L$ is given by
+where $d_L$ is the luminosity distance in Mpc. In a flat universe, $d_L$ is given by
 \begin{equation}
     d_L(z) = c(1 + z) \int_{0}^{z} \frac{dz^\prime}{H(z^\prime)},
 \end{equation}
-where $H$ is the Hubble parameter and $c$ the speed of light. A flat universe means no spatial curvature on large distances, and the Friedmann equation (explaining how the expansion rate of the Universe depends on its energy content) can be expressed as
-\begin{equation}
-    1 = \Omega_M + \Omega_k + \Omega_\Lambda = \Omega_M + \Omega_\Lambda,
-\end{equation}
-where $\Omega_M$, $\Omega_k$, and $\Omega_\Lambda$ are the matter, curvature, and cosmological constant (dark energy) density parameters respectively. By normalizing these with present values (subscript 0), one can get the reduced version of the so called $\Lambda$CDM cosmology
+where $H$ is the Hubble parameter and $c$ the speed of light. In this case, the Friedmann equation reduces to $1 = \Omega_M + \Omega_\Lambda$, where $\Omega_M$ and $\Omega_\Lambda$ are the matter and dark energy density parameters. By normalizing these with present values (subscript 0), one can get the reduced version of the so called $\Lambda$CDM cosmology
 \begin{equation}\label{lCDM}
     H(z) = H_0 \sqrt{\Omega_{M,0}(1+z)^3 + \Omega_{\Lambda,0}} \equiv H_0\,E(z)^{1/2}.
 \end{equation}
 
-For $z << 1$ (generally accepted to be $z < 0.5$), Taylor expansion gives
-\begin{equation}
-    E(z) \approx \Omega_{M,0}(1+3z) + \Omega_{\Lambda,0} = 1 + 2z\,(q_0 + 1),
-\end{equation}
-where $q_0 = (\Omega_{M,0} - 2\Omega_{\Lambda,0})/2$ is called the deceleration parameter, showing if the Universal expansion is decelerating ($q_0>0$) or accelerating ($q_0<0$). In the small-$z$ domain, $d_L$ can also be rewritten as 
+For $z << 1$ (generally accepted to be $z < 0.5$), Taylor expansion gives of Eq. \ref{lCDM} leads to $E(z) \approx 1 + 2z\,(q_0 + 1)$, where $q_0 = (\Omega_{M,0} - 2\Omega_{\Lambda,0})/2$ is called the deceleration parameter, showing if the Universal expansion is decelerating ($q_0>0$) or accelerating ($q_0<0$). In the small-$z$ domain, $d_L$ can also be rewritten as 
 \begin{equation}\label{small_z}
     d_L(z) = c(1+z)\int_{0}^{z}\frac{dz'}{H(z')} \approx \frac{c}{H_0}\left( z + \frac{1}{2}(1-q_0)z^2 + \dots \right).
 \end{equation}
@@ -72,11 +63,9 @@ The likelihood function was constructed assuming Gaussian errors on the observed
 \begin{equation}
     \ln \mathcal{L}(\mu_{\text{obs}} | H_0, q_0, s^2) = -\frac{1}{2} \sum_{i} \left[ \frac{(\mu_{\text{obs},i} - \mu_{\text{model},i})^2}{\sigma_{\mu,i}^2s^2} + \ln(2\pi\sigma_{\mu,i}^2s^2) \right],
 \end{equation}
-where $\mu_{\text{model},i}$ is the model-predicted distance modulus from equation \ref{d_L} for the $i$-th supernova given parameters $H_0$ and $q_0$, and $\sigma_{\mu,i}$ is the observational uncertainty. To calculate $d_L$ using parameters $H_0$ and $q_0$, Eq. \ref{small_z} up to second order was used, as we only considered supernovae with $z < 0.5$. Following Bayes' theorem, the log posterior is given by the sum of the log prior and log likelihood.
+where $\mu_{\text{model},i}$ is the model-predicted distance modulus from equation \ref{d_L} for the $i$-th supernova given parameters $H_0$ and $q_0$, and $\sigma_{\mu,i}$ is the observational uncertainty. To calculate $d_L$ using parameters $H_0$ and $q_0$, Eq. \ref{small_z} up to second order was used, as we only considered supernovae with $z < 0.5$. Following Bayes' theorem, the log posterior is then given by the sum of the log prior and log likelihood.
 
-To sample the posterior distribution, the Markov Chain Monte Carlo (MCMC) method was employed using the \texttt{emcee} package \cite{emcee}. 50 walkers were initialized randomly within the prior bounds and run for 5000 iterations, discarding the first 1000 iterations as burn-in. Convergence was assessed by visually inspecting trace plots. After obtaining the MCMC samples, posterior distributions for $H_0$ and $q_0$, together with the unknown error variance parameter $s^2$, were analyzed. Using the \texttt{corner} Python package, corner plots were created to visualize the joint and marginal posterior distributions of the parameters \cite{corner}. 
-
-In addition to the posterior analysis, posterior predictive checks were performed to assess the model fit. Using the posterior samples and Eq. \ref{d_L} and \ref{small_z}, predicted distance moduli $\mu_{\text{model}}$ were generated across the original range of redshift values $z \in [0.1, 1.5]$, i.e., not only for small $z$, and compared to the observed data. The median of the predicted distance moduli was plotted alongside the observed data in order to visually evaluate the model's performance.
+To sample the posterior distribution, Markov Chain Monte Carlo (MCMC) was employed using the \texttt{emcee} package \cite{emcee}. 50 walkers were initialized randomly within the prior bounds and run for 6000 iterations, discarding the first 1000 iterations as burn-in. Convergence was assessed by visually inspecting trace plots. After sampling, posterior distributions for $H_0$, $q_0$, and $s^2$, were analyzed. Corner plots using the \texttt{corner} package were created to visualize the joint and marginal posterior distributions of the parameters \cite{corner}. In addition to the posterior analysis, posterior predictive checks were performed to assess the model fit. Using the posterior samples and Eq. \ref{d_L} and \ref{small_z}, predicted distance moduli $\mu_{\text{model}}$ were generated across the original range of redshift values $z \in [0.1, 1.5]$, i.e., not only for small $z$, and compared to the observed data. %The median of the predicted distance moduli was plotted alongside the observed data in order to visually evaluate the model's performance.
 
 The second part of the project focused on comparing the $\Lambda$CDM and wCDM cosmological models defined by the expressions for $H(z)$ in Eq. \ref{lCDM} and \ref{wCDM}. Due to the increased complexity when considering the full redshift range in Eq. \ref{small_z}, the models were compared using AIC and BIC scores. The log-likelihood function was modified to account for the whole redshift range, using the \texttt{scipy} package to perform the necessary numerical integration for $d_L(z)$ in Eq. \ref{small_z} \cite{2020SciPy-NMeth}. The same package was used to optimize the log-likelihood function for both models, yielding maximum log-likelihood estimates for the parameters. The AIC and BIC scores were then calculated using the formulas
 \begin{align}
@@ -88,20 +77,18 @@ where $k$ is the number of model parameters, $N$ the number of data points, and 
 Finally, MCMC sampling was performed for the $\Lambda$CDM model to obtain the posterior distribution of $\Omega_{M,0}$. The same MCMC setup as before was used, however this time using 10 walkers and 1\,100 iterations due to the increased complexity, discarding the first 100 as burn-in. As above, we also considered the overall variance scale known in this case. For $H_0$, we fixed its value at 70 \si{\kilo\metre\per\second\per\mega\parsec}, and for $\Omega_{M,0}$, we used a uniform prior with values $\Omega_{M,0} \in [0, 1]$. The posterior samples were analyzed to derive credible intervals and visualize the marginal posterior distribution of $\Omega_{M,0}$.
 \vspace{-0.5cm}
 \section{Results}
-Below we present the results obtained in the analysis of the supernova data for parameter estimation and cosmological model comparison.
-
-Fig.~\ref{fig:corner_plot} shows the joint and marginal posteriors for $H_0$, $q_0$, and the variance scale $\sigma^2$, together with the corresponding trace panels. The diagonal marginals are close to Gaussian, with posterior medians and 68\% credible intervals $H_0 = 69.79^{+0.42}_{-0.41}\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$, $q_0 = -0.419^{+0.068}_{-0.070}$, and $\sigma^2 = 0.968^{+0.034}_{-0.032}$. The negative $q_0$ indicates accelerated expansion, and a $\sigma^{2}$ near unity indicates that the quoted uncertainties require no overall rescaling. The contours reveal a clear negative correlation between $H_0$ and $q_0$ (meaning that as $H_0$ increases, we have a stronger present-day cosmic acceleration, i.e., lower $q_0$) and only weak coupling of $\sigma^2$ to the other parameters. The trace panels are stationary and show rapid mixing, consistent with adequate burn-in removal and stable sampling.
-
-Fig.~\ref{fig:posterior_predictive} displays the Hubble diagram: distance modulus $\mu$ versus redshift $z$ for the supernova data together with the small-$z$ model curve $\mu(z<0.5;H_0,q_0)$ evaluated using the posterior median parameters from Fig.~\ref{fig:corner_plot}. The curve follows the data closely for $z\lesssim 0.5$ and exhibits the gentle upward curvature expected for $q_0<0$. For $z\gtrsim 0.5$ systematic departures between the second-order model and the points become apparent, reflecting the limited validity of the small-$z$ expansion at higher redshift. The vertical scatter of the low-$z$ points about the curve is comparable to the quoted uncertainties, consistent with the inferred variance scale $\sigma^{2}\simeq 1$.
+Fig.~\ref{fig:corner_plot} shows the joint and marginal posteriors for $H_0$, $q_0$, and $\sigma^2$, together with corresponding trace panels. The diagonal marginals are close to Gaussian, with posterior medians and 68\% credible intervals $H_0 = 69.79^{+0.42}_{-0.41}\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$, $q_0 = -0.419^{+0.068}_{-0.070}$, and $\sigma^2 = 0.968^{+0.034}_{-0.032}$. The negative $q_0$ indicates accelerated expansion, and a $\sigma^{2}$ near unity indicates that the quoted uncertainties require no overall rescaling. The contours reveal a clear negative correlation between $H_0$ and $q_0$ (meaning that as $H_0$ increases, we have a stronger present-day cosmic acceleration, i.e., lower $q_0$) and only weak coupling of $\sigma^2$ to the other parameters. The trace panels are stationary and show rapid mixing, consistent with adequate burn-in removal and stable sampling.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.99\textwidth, trim={0.2cm 0.1cm 0.2cm 0.1cm}, clip]{figs/post_samples_H0_q0_sigma2.png}
+    \includegraphics[width=\textwidth, trim={0.2cm 0.1cm 0.2cm 0.1cm}, clip]{figs/post_samples_H0_q0_sigma2.png}
     \vspace{-0.1cm}
     \caption{Left: Corner plot showing the posterior distributions and correlations between $H_0$, $q_0$, and $\sigma_{\mathrm{sys}}^2$. The histograms on the diagonal represent the marginal distributions, while the off-diagonal plots show the joint distributions. Right: Trace plots for the MCMC chains of each parameter.}
     \label{fig:corner_plot}
 \end{figure}
-\vspace{-0.4cm}
+\newpage
+Fig.~\ref{fig:posterior_predictive} displays the Hubble diagram: distance modulus $\mu$ versus redshift $z$ for the supernova data together with the small-$z$ model curve $\mu(z<0.5;H_0,q_0)$ evaluated using the posterior median parameters from Fig.~\ref{fig:corner_plot}. The curve follows the data closely for $z\lesssim 0.5$ and exhibits the gentle upward curvature expected for $q_0<0$. For $z\gtrsim 0.5$ systematic departures between the second-order model and the points become apparent, reflecting the limited validity of the small-$z$ expansion at higher redshift. The vertical scatter of the low-$z$ points about the curve is comparable to the quoted uncertainties, consistent with the inferred variance scale $\sigma^{2}\simeq 1$.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{figs/mu_model_pred.pdf}
@@ -124,7 +111,7 @@ Using the full redshift range with $H_0=70\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$ to co
     \label{tab_IC}
 \end{table}
 \vspace{-0.3cm}
-The marginal posterior for $\Omega_{M,0}$ under flat $\Lambda$CDM (known measurement variances) is unimodal and peaks near the maximum-likelihood value reported in Table~\ref{tab_IC}, providing a consistent central estimate around $\Omega_{M,0}\approx 0.28$. The distribution is fairly narrow with an approximately symmetric core, indicating that the matter density is reasonably well constrained by the full-redshift sample in this model. The posterior mass lies well away from the boundaries $\Omega_{M,0}=0$ and $1$, and the mode and median are in close agreement with the best-fit value. Sampler traces are stationary with short autocorrelation times, indicating adequate mixing and stable estimates.
+The marginal posterior for $\Omega_{M,0}$ under flat $\Lambda$CDM (known measurement variances) peaks near the maximum-likelihood value reported in Table~\ref{tab_IC}, providing a consistent central estimate around $\Omega_{M,0}\approx 0.28$. The distribution is tight and symmetric, indicating the full-redshift data constrain $\Omega_{M,0}$ well. The posterior mass lies well away from the boundaries $\Omega_{M,0}=0$ and $1$, and the mode and median are in close agreement with the best-fit value. Sampler traces have clearly converged, indicating adequate mixing and stable estimates.
 
 \begin{figure}[H]
     \centering
@@ -143,7 +130,6 @@ Over the full redshift range, the best-fit matter densities are $\Omega_{M,0}=0.
 
 -Write about how to improve inference for $q_0$ and $H_0$.
 -Write somethign about final figure?
-
 
 \printbibliography
 
