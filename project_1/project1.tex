@@ -7,6 +7,7 @@
 \lstset{language=Python}
 \title{
 \sffamily
+\vspace{-2.5cm}
 {\Huge\textbf{Report on Project 1}} \\
 Cosmological Models
 }
@@ -63,9 +64,9 @@ Other cosmologies can also be explored within the flat Universe. An extension to
 \begin{equation}\label{wCDM}
     E(z) = \Omega_{M,0}(1+z)^3 + \Omega_{\Lambda,0}(1+z)^{3(1+w)}.
 \end{equation}
-\vspace{-0.5cm}
+\vspace{-1.2cm}
 \section{Methodology}
-The first task was to infer values on the Hubble constant $H_0$ and the deceleration parameter $q_0$ from provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae \cite{SCPwebsite}. For the given purpose, log prior, log likelihood, and log posterior functions were defined. The prior distributions for $H_0$ and $q_0$ were chosen to be uniform within reasonable bounds based on prior knowledge from cosmological observations. We used $H_0 \in [30, 100]\,\si{\kilo\metre\per\second\per\mega\parsec}$ and $q_0 \in [-2, 2]$. For the unknown error variance parameter $s^2$, we used an inverse gamma prior with shape set to 1 and scale set to 1.
+The first task was to infer values on the Hubble constant $H_0$ and deceleration parameter $q_0$ from provided supernova data using a Bayesian framework. The data consisted of redshift values $z$, observed distance moduli $\mu_{\text{obs}}$, and their associated uncertainties $\sigma_{\mu}$ for 833 Type Ia supernovae \cite{SCPwebsite}. Accordingly, log prior, log likelihood, and log posterior functions were defined. The prior distributions for $H_0$ and $q_0$ were chosen to be uniform within bounds based on prior knowledge from cosmological observations. We used $H_0 \in [30, 100]\,\si{\kilo\metre\per\second\per\mega\parsec}$ and $q_0 \in [-2, 2]$. For the unknown error variance parameter $s^2$, we used an inverse gamma prior with shape set to 1 and scale set to 1.
 
 The likelihood function was constructed assuming Gaussian errors on the observed $\mu$,
 \begin{equation}
@@ -82,26 +83,25 @@ The second part of the project focused on comparing the $\Lambda$CDM and wCDM co
     \text{AIC} &= 2\ln(\mathcal{L}^\star) - 2k \label{eq_AIC}\\
     \text{BIC} &= 2\ln(\mathcal{L}^\star) - k \ln(N) \label{eq_BIC},
 \end{align}
-where $k$ is the number of parameters in the model, $N$ is the number of data points, and $\mathcal{L}^\star$ is the maximum value of the likelihood function. The model with the lower AIC and BIC scores was considered to have a better balance between goodness-of-fit and model complexity \textcolor{Maroon}{Indikerar inte högre värde för AIC/BIC bättre model?}. In this case, we assumed that the overall variance was known and equal to the sample variance of the observed distance moduli. From the maximum likelihood estimates, we also derived the matter and dark energy density parameters $\Omega_{M,0}$ and $\Omega_{\Lambda,0}$ for both models. 
+where $k$ is the number of model parameters, $N$ the number of data points, and $\mathcal{L}^\star$ the maximum likelihood value. The model with the higher AIC and BIC scores was considered to have a better balance between fit quality and model complexity. In this case, we assumed that the overall variance was known and equal to the sample variance of the observed distance moduli. From the maximum likelihood estimates, we also found the matter and dark energy density parameters $\Omega_{M,0}$ and $\Omega_{\Lambda,0}$ for both models. 
 
 Finally, MCMC sampling was performed for the $\Lambda$CDM model to obtain the posterior distribution of $\Omega_{M,0}$. The same MCMC setup as before was used, however this time using 10 walkers and 1\,100 iterations due to the increased complexity, discarding the first 100 as burn-in. As above, we also considered the overall variance scale known in this case. For $H_0$, we fixed its value at 70 \si{\kilo\metre\per\second\per\mega\parsec}, and for $\Omega_{M,0}$, we used a uniform prior with values $\Omega_{M,0} \in [0, 1]$. The posterior samples were analyzed to derive credible intervals and visualize the marginal posterior distribution of $\Omega_{M,0}$.
 \vspace{-0.5cm}
 \section{Results}
-Below we present the results obtained in the analysis of the supernova data using the Bayesian framework and MCMC sampling, as well as the model comparison between $\Lambda$CDM and wCDM cosmologies. 
+Below we present the results obtained in the analysis of the supernova data for parameter estimation and cosmological model comparison.
 
-Fig.~\ref{fig:corner_plot} shows a corner plot of the joint and marginal posteriors for $H_0$, $q_0$, and the variance scale $\sigma^2$, together with the corresponding trace panels. The diagonal marginals are close to Gaussian, with posterior medians and 68\% credible intervals $H_0 = 69.79^{+0.42}_{-0.41}\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$, $q_0 = -0.419^{+0.068}_{-0.070}$, and $\sigma^2 = 0.968^{+0.034}_{-0.032}$. The negative $q_0$ indicates accelerated expansion, and a $\sigma^{2}$ near unity indicates that the quoted uncertainties require no overall rescaling. In the off-diagonal panels, the contours reveal a clear negative correlation between $H_0$ and $q_0$ and only weak coupling of $\sigma^2$ to the other parameters. The trace panels are stationary and show rapid mixing, consistent with adequate burn-in removal and stable sampling.
+Fig.~\ref{fig:corner_plot} shows the joint and marginal posteriors for $H_0$, $q_0$, and the variance scale $\sigma^2$, together with the corresponding trace panels. The diagonal marginals are close to Gaussian, with posterior medians and 68\% credible intervals $H_0 = 69.79^{+0.42}_{-0.41}\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$, $q_0 = -0.419^{+0.068}_{-0.070}$, and $\sigma^2 = 0.968^{+0.034}_{-0.032}$. The negative $q_0$ indicates accelerated expansion, and a $\sigma^{2}$ near unity indicates that the quoted uncertainties require no overall rescaling. The contours reveal a clear negative correlation between $H_0$ and $q_0$ (meaning that as $H_0$ increases, we have a stronger present-day cosmic acceleration, i.e., lower $q_0$) and only weak coupling of $\sigma^2$ to the other parameters. The trace panels are stationary and show rapid mixing, consistent with adequate burn-in removal and stable sampling.
 
+Fig.~\ref{fig:posterior_predictive} displays the Hubble diagram: distance modulus $\mu$ versus redshift $z$ for the supernova data together with the small-$z$ model curve $\mu(z<0.5;H_0,q_0)$ evaluated using the posterior median parameters from Fig.~\ref{fig:corner_plot}. The curve follows the data closely for $z\lesssim 0.5$ and exhibits the gentle upward curvature expected for $q_0<0$. For $z\gtrsim 0.5$ systematic departures between the second-order model and the points become apparent, reflecting the limited validity of the small-$z$ expansion at higher redshift. The vertical scatter of the low-$z$ points about the curve is comparable to the quoted uncertainties, consistent with the inferred variance scale $\sigma^{2}\simeq 1$.
 
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.99\textwidth, trim={0.2cm 0.1cm 0.2cm 0.1cm}, clip]{figs/post_samples_H0_q0_sigma2.png}
-%     \caption{Left: Corner plot showing the posterior distributions and correlations between the parameters $H_0$, $q_0$, and $\sigma_{\mathrm{sys}}^2$. The histograms on the diagonal represent the marginal distributions for each parameter, while the off-diagonal plots show the joint distributions. Right: Trace plots for the MCMC chains of each parameter, indicating good mixing and convergence.}
-%     \label{fig:corner_plot}
-% \end{figure}
-
-Fig.~\ref{fig:hubble} displays the Hubble diagram: distance modulus $\mu$ versus redshift $z$ for the supernova sample (points with $1\sigma$ uncertainties) together with the small-$z$ model curve $\mu(z;H_0,q_0)$ evaluated at the posterior-median parameters from Fig.~\ref{fig:corner_plot}. The curve follows the data closely for $z\lesssim 0.5$ and exhibits the gentle upward curvature expected for $q_0<0$. For $z\gtrsim 0.5$ systematic departures between the second-order model and the points become apparent, reflecting the limited validity of the small-$z$ expansion at higher redshift. The vertical scatter of the low-$z$ points about the curve is comparable to the quoted uncertainties, consistent with the inferred variance scale $\sigma^{2}\simeq 1$.
-
-
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth, trim={0.2cm 0.1cm 0.2cm 0.1cm}, clip]{figs/post_samples_H0_q0_sigma2.png}
+    \vspace{-0.1cm}
+    \caption{Left: Corner plot showing the posterior distributions and correlations between $H_0$, $q_0$, and $\sigma_{\mathrm{sys}}^2$. The histograms on the diagonal represent the marginal distributions, while the off-diagonal plots show the joint distributions. Right: Trace plots for the MCMC chains of each parameter.}
+    \label{fig:corner_plot}
+\end{figure}
+\vspace{-0.4cm}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.6\textwidth]{figs/mu_model_pred.pdf}
@@ -109,11 +109,9 @@ Fig.~\ref{fig:hubble} displays the Hubble diagram: distance modulus $\mu$ versus
     \caption{Posterior predictive check showing the observed distance moduli (red points) with error bars and the model median (black line) as a function of redshift $z$.}
     \label{fig:posterior_predictive}
 \end{figure}
-
-Using the full redshift range with $H_0=70\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$ to compare the two flat background models, $\Lambda$CDM and wCDM, yields very similar maximum-likelihood estimates ($\Omega_{M,0}\approx 0.28$ and $\Omega_{\Lambda,0}\approx 0.72$), see Table~\ref{tab_IC}. The fitted $w$ is essentially $-1$, making wCDM effectively consistent with $\Lambda$CDM within the precision of this dataset.
-
-The AIC and BIC values in Table~\ref{tab_IC} are slightly higher for $\Lambda$CDM, favoring the simpler model. This is consistent with the wCDM fit settling at $w\approx -1$ while introducing an additional parameter.
-
+\vspace{-0.3cm}
+Using the full redshift range with $H_0=70\,\mathrm{km\,s^{-1}\,Mpc^{-1}}$ to compare the two flat models, $\Lambda$CDM and wCDM, yields very similar maximum-likelihood estimates ($\Omega_{M,0}\approx 0.28$ and $\Omega_{\Lambda,0}\approx 0.72$), see Table~\ref{tab_IC}. The fitted $w$ is essentially $-1$, making wCDM consistent with $\Lambda$CDM within the precision of this dataset. The AIC and BIC values in Table~\ref{tab_IC} are slightly higher for $\Lambda$CDM, favoring the simpler model. This is consistent with the wCDM fit settling at $w\approx -1$ while introducing an additional parameter.
+\vspace{-0.3cm}
 \begin{table}[H]
     \centering
     \caption{AIC and BIC scores for the $\Lambda$CDM and wCDM models, along with the maximum likelihood estimates of $H_0$, $\Omega_{M,0}$, $\Omega_{\Lambda,0}$, and $w$.}
@@ -125,9 +123,8 @@ The AIC and BIC values in Table~\ref{tab_IC} are slightly higher for $\Lambda$CD
     \end{tabular}
     \label{tab_IC}
 \end{table}
-
+\vspace{-0.3cm}
 The marginal posterior for $\Omega_{M,0}$ under flat $\Lambda$CDM (known measurement variances) is unimodal and peaks near the maximum-likelihood value reported in Table~\ref{tab_IC}, providing a consistent central estimate around $\Omega_{M,0}\approx 0.28$. The distribution is fairly narrow with an approximately symmetric core, indicating that the matter density is reasonably well constrained by the full-redshift sample in this model. The posterior mass lies well away from the boundaries $\Omega_{M,0}=0$ and $1$, and the mode and median are in close agreement with the best-fit value. Sampler traces are stationary with short autocorrelation times, indicating adequate mixing and stable estimates.
-
 
 \begin{figure}[H]
     \centering
@@ -136,7 +133,7 @@ The marginal posterior for $\Omega_{M,0}$ under flat $\Lambda$CDM (known measure
     \caption{Left: Marginal posterior distribution of $\Omega_{M,0}$ under the $\Lambda$CDM model. The thick dashed line indicate the mean value, while the dotted lines represent 1$\sigma$ credible intervals. Right: Trace plot for the MCMC chain of $\Omega_{M,0}$.}
     \label{fig:Om_marginal_posterior}
 \end{figure}
-\vspace{-0.5cm}
+\vspace{-1.2cm}
 \section{Discussion and Conclusion}
 
 \printbibliography
