@@ -31,6 +31,46 @@ Oscar Stommendal\\
 % \end{center}
 \vspace{-1.5cm}
 \section{Introduction}
+This report explores different methods for constructing an alloy cluster expansion model for the Au-Cu alloy, using various levels of physical intuition in the model construction process.
+This physical intuition will be instilled through more and more complex priors, ranging from the completely uninformative prior of OLS to a full Bayesian analysis where the prior hyperparameters are sampled as well.
+The different cluster expansion models are then applied to the problem of predicting the ground state structure amongst a few different candidates.
+
+\section{Theory}
+
+Density functional theory (DFT) provides the total energy
+$E_{\text{structure}}$ of a given atomistic configuration.
+For alloy systems it is convenient to work instead with the mixing energy
+per atom, which measures the energy relative to the pure elements.
+For an Au--Cu structure this is defined as
+\begin{equation}
+  E_{\text{mix}} =
+  \frac{E_{\text{structure}} - n_{\text{Au}} E_{\text{Au}}
+        - n_{\text{Cu}} E_{\text{Cu}}}
+       {n_{\text{Au}} + n_{\text{Cu}}},
+\end{equation}
+where $n_{\text{Au}}$ and $n_{\text{Cu}}$ are the numbers of Au and Cu atoms
+and $E_{\text{Au}}$ and $E_{\text{Cu}}$ are the energies of pure Au and Cu.
+The mixing energy is the relevant quantity when analysing, for example,
+phase stability of alloys.
+
+The alloy cluster expansion provides an atomistic model on a perfect lattice.
+In this framework the mixing energy is written as a sum over
+symmetry–distinct clusters (orbits),
+\begin{equation}
+  E_{\text{mix}} = J_0 + \sum_{\alpha} m_{\alpha} J_{\alpha},
+\end{equation}
+where $m_{\alpha}$ is the multiplicity of orbit $\alpha$ and $J_{\alpha}$
+the corresponding effective cluster interaction (ECI).
+For a set of configurations this expression can be cast in linear form,
+\begin{equation}
+  \mathbf{E} = \mathbf{X}\mathbf{J},
+\end{equation}
+where $\mathbf{E}$ collects the mixing energies, $\mathbf{X}$ is the matrix
+of cluster vectors and $\mathbf{J}$ is the ECI vector.
+
+\section{Method}
+
+
 
 \printbibliography
 
