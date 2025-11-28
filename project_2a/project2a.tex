@@ -31,46 +31,166 @@ Oscar Stommendal\\
 % \end{center}
 \vspace{-1.5cm}
 \section{Introduction}
-This report explores different methods for constructing an alloy cluster expansion model for the Au-Cu alloy, using various levels of physical intuition in the model construction process.
-This physical intuition will be instilled through more and more complex priors, ranging from the completely uninformative prior of OLS to a full Bayesian analysis where the prior hyperparameters are sampled as well.
-The different cluster expansion models are then applied to the problem of predicting the ground state structure amongst a few different candidates.
+In order to understand the laws and physics of our universe, we must start from the most fundamental building blocks. This often means starting with our beloved atoms. However, simulating materials at the atomic scale can be computationally expensive, especially for large, complex systems. To overcome these challenges, models that can accurately and efficiently predict material properties based on a limited set of atomic-scale calculations are essential. One such model is the alloy cluster expansion (CE), which provides a systematic way to represent the energetics of alloy systems on a lattice. By expressing the total energy as a sum over contributions from clusters of atoms, CE allows for efficient exploration of configuration space and prediction of properties.
 
+This project explores different methods for constructing a CE model for the Au--Cu alloy, using various levels of physical intuition in the model construction process. This intuition will be instilled through more and more complex priors, ranging from the completely uninformative prior of OLS to a full Bayesian analysis where the prior hyperparameters are sampled as well. The different CE models are then applied to the problem of predicting the ground state structure amongst a few different candidates.
+\vspace{-0.5cm}
 \section{Theory}
-
-Density functional theory (DFT) provides the total energy
-$E_{\text{structure}}$ of a given atomistic configuration.
-For alloy systems it is convenient to work instead with the mixing energy
-per atom, which measures the energy relative to the pure elements.
-For an Au--Cu structure this is defined as
+One widely used theory for atomic-scale calculations is the density functional theory (DFT) \cite{kohn1965self}. This provides the total energy $E_{\text{structure}}$ of a given atomic configuration. For alloy systems, however, it is convenient to instead work with the mixing energy per atom, measuring the energy relative to the pure elements. For an Au--Cu structure,
 \begin{equation}
   E_{\text{mix}} =
   \frac{E_{\text{structure}} - n_{\text{Au}} E_{\text{Au}}
         - n_{\text{Cu}} E_{\text{Cu}}}
        {n_{\text{Au}} + n_{\text{Cu}}},
 \end{equation}
-where $n_{\text{Au}}$ and $n_{\text{Cu}}$ are the numbers of Au and Cu atoms
-and $E_{\text{Au}}$ and $E_{\text{Cu}}$ are the energies of pure Au and Cu.
-The mixing energy is the relevant quantity when analysing, for example,
-phase stability of alloys.
-
-The alloy cluster expansion provides an atomistic model on a perfect lattice.
-In this framework the mixing energy is written as a sum over
-symmetry–distinct clusters (orbits),
+where $n_{\text{Au}}$ and $n_{\text{Cu}}$ are the numbers of Au and Cu atoms and $E_{\text{Au}}$ and $E_{\text{Cu}}$ the energies of pure Au and Cu. The alloy CE provides an atomic model on a perfect lattice. In this framework, the mixing energy is written as a sum over the distinct clusters (orbits),
 \begin{equation}
   E_{\text{mix}} = J_0 + \sum_{\alpha} m_{\alpha} J_{\alpha},
 \end{equation}
-where $m_{\alpha}$ is the multiplicity of orbit $\alpha$ and $J_{\alpha}$
-the corresponding effective cluster interaction (ECI).
-For a set of configurations this expression can be cast in linear form,
+where $m_{\alpha}$ is the multiplicity of orbit $\alpha$ and $J_{\alpha}$ the corresponding effective cluster interaction (ECI). For a set of configurations this expression can be cast in linear form,
 \begin{equation}
-  \mathbf{E} = \mathbf{X}\mathbf{J},
+  \bm{E} = \bm{X}\bm{J},
 \end{equation}
-where $\mathbf{E}$ collects the mixing energies, $\mathbf{X}$ is the matrix
-of cluster vectors and $\mathbf{J}$ is the ECI vector.
+where $\bm{E}$ are the mixing energy vector, $\bm{X}$ the cluster vector matrix, and $\bm{J}$ the ECI vector. From here, different regression methods can be used to estimate the ECIs from a training set of DFT-calculated mixing energies.
 
-\section{Method}
+\section{Methodology}
+Below, we outline the different methods that were used to estimate the ECIs for the Au--Cu alloy system. We also present the approach used to predict the ground state structure from different ground state candidates.
+\subsection{Data Preprocessing}
+The data consisted of DFT-calculated mixing energies and corresponding atomic structures for the Au--Cu alloy. A common issue when analyzing alloy systems is to choose the ideal number of clusters to include in the model. Including too few clusters can lead to underfitting, %(meaning that the model is too simple to capture the underlying physics)
+while including too many can lead to overfitting. %(similarly, this means that the model is too complex and captures noise in the data instead of the underlying trends)
+In this project (except for the ARDR method) we considered clusters up to and including 4-body clusters with cutoffs 8, 6 and 5 Å for 2-(pairs), 3-(triplets) and 4-(quadruplets) body clusters, respectively. This resulted in a total of 52 clusters, including the empty cluster.
 
+Using the \texttt{ClusterSpace} and \texttt{StructureContainer} classes from \texttt{icet}, an open source Python library for analyzing alloy CEs, we generated cluster vectors $\bm{X}$ and mixing energies $\bm{E}$ for all structures \cite{angqvist2019icet}. For an initial picture of the data, the mixing energy as a function of the Cu concentration was plotted. For further analysis and regression, $\bm{E}$ and $\bm{X}$ were standardized to have zero mean and unit variance using the \texttt{StandardScaler} class from \texttt{sklearn} \cite{scikit-learn}. This is a common practice in machine learning to ensure that all features are on the same scale, which can improve the performance of regression algorithms \cite{scikit-learn}. However, in this case, since the cluster vectors are already on similar scales, standardization is most likely not strictly necessary.
 
+\subsection{Estimation of \texorpdfstring{$\bm{J}$}{J} Using OLS and Ridge Regression}
+The first methods used to estimate the ECIs were ordinary least squares (OLS) and ridge regression. OLS provides a simple and straightforward approach to estimate the ECIs by minimizing the sum of squared residuals between the predicted and actual mixing energies. This can be described mathematically as
+\begin{equation}
+  \bm{J}_{\text{OLS}} = \min_{\bm{J}} \|\bm{X}\bm{J} - \bm{E_\text{mix}}\|_2^2 \iff\bm{J}_\text{OLS} = (\bm{X}^T \bm{X})^{-1} \bm{X}^T \bm{E_\text{mix}}.
+\end{equation}
+Using \texttt{sklearn}, this was implemented using the \texttt{LinearRegression} class \cite{scikit-learn}. On the other hand, ridge regression adds an $L_2$ regularization term to the OLS objective function, which helps to prevent overfitting by penalizing large coefficients. The ridge regression objective function can be expressed as
+\begin{equation}
+  \bm{J}_{\text{Ridge}} = \left ( \bm{X}^T \bm{X} + \alpha \bm{I} \right )^{-1} \bm{X}^T \bm{E_\text{mix}},
+\end{equation}
+This was implemented using the \texttt{RidgeCV} class from \texttt{sklearn}, which performs ridge regression with built-in cross-validation (CV) to find the optimal regularization parameter $\alpha$ \cite{scikit-learn}. % CV splits the data into training and validation sets multiple times to evaluate the model's performance and thus select the best hyperparameter. 
+In our case, we used 10-fold CV due to the relative small data set.%, meaning that the data was randomly split into 10 subsets, and the model was trained on 9 subsets and validated on the remaining one, repeating this process 10 times.
+After estimating the ECIs using OLS and ridge regression, the models were evaluated using the root-mean-square error (RMSE). Also, the ECIs obtained from both methods were compared to analyze the effect of regularization on the model parameters.
+
+\subsection{Estimation of \texorpdfstring{$\bm{J}$}{J} Using Covariance-based Regularization}
+Similarly to ridge regression, covariance-based regularization uses prior knowledge to regularize the estimation of the ECIs. However, instead of using a single regularization parameter $\alpha$, this method defines individual regularization parameters for each ECI based on physical intuition about the system. This can be expressed mathematically as
+\begin{equation}
+  \bm{J}_{\text{Cov}} = \left ( \bm{X}^T \bm{X} + \bm{\Lambda} \right )^{-1} \bm{X}^T \bm{E_\text{mix}},
+\end{equation}
+where $\bm{\Lambda}$ is the diagonal covariance matrix containing the individual regularization parameters $\lambda_\alpha$ for each cluster $\alpha$. The values of $\lambda_\alpha$ were determined based on the physical intuition that larger clusters with more sites should have smaller contributions to the mixing energy. Thus, $\lambda_\alpha$ was defined as $\lambda_\alpha = \gamma_1 r + \gamma_2 n$, where $r$ is the cluster radius, $n$ the number of cluster sites, and $\bm{\gamma} \equiv (\gamma_1, \gamma_2)$ is the hyperparameter vector that controls the regularization strength. To find the optimal $\bm{\gamma}$, the CV-RMSE was minimized using the \texttt{minimize} function from \texttt{scipy.optimize} \cite{2020SciPy-NMeth}, again using 10-fold CV. 
+\vspace{-0.5cm}
+\subsection{Estimation of \texorpdfstring{$\bm{J}$}{J} Using Full Bayesian Inference with MCMC}
+Using a Bayesian approach, the ECIs can be estimated by sampling from the logarithm of the posterior distribution of the parameters given the data. This was done using Markov chain Monte Carlo (MCMC) sampling using the \texttt{emcee} library \cite{emcee}. Following Bayes' theorem, the posterior can be expressed as the product of the likelihood and the prior. Assuming Gaussian noise for $\bm{E}$, the likelihood can be expressed as
+\begin{equation}
+  P(\bm{E} | \bm{J}, \sigma_{\text{sys}}) = \mathcal{N}(\bm{E} | \bm{X}\bm{J}, \sigma_{\text{sys}}^2 \bm{I}) \equiv \frac{1}{(2 \pi \sigma_{\text{sys}}^2)^{N/2}} \exp \left ( -\frac{1}{2 \sigma_{\text{sys}}^2} \|\bm{E} - \bm{X}\bm{J}\|_2^2 \right ),
+\end{equation}
+where $\sigma_{\text{sys}}$ is the standard deviation of the systematic noise and $N$ the number of data points. For the prior, we assumed a Gaussian prior for the ECIs and inverse-gamma priors for the hyperparameters $\sigma_{\text{sys}}$ and $\alpha$, leading to
+\begin{equation}
+  P(\bm{J}, \sigma_{\text{sys}}, \alpha) = \mathcal{N}(\bm{J} | 0, \alpha^2 \bm{I}) \cdot \mathcal{IG}(\sigma_{\text{sys}} | a=2, b=0.05) \cdot \mathcal{IG}(\alpha | a=2, b=0.1).
+\end{equation}
+For the hyperparameters, prior knowledge resulted in the bounds $\sigma_{\text{sys}} \in [0.02, 2]$ and $\alpha \in [0.05, 0.5]$, which were enforced during sampling. The posterior distribution was then sampled using 100 walkers (initialized with small random perturbations around 0) and 4\,000 steps, discarding the first 3\,000 steps as burn-in after confirming convergence using trace plots. The resulting samples were used to plot the ECIs for one of the MCMC chains and to analyze the number of significant (non-zero) ECIs.
+\vspace{-0.5cm}
+\subsection{Automatic Relevance Detection Regression (ARDR)}
+The previous methods required some level of manual work in selecting hyperparameters or regularization strengths. To avoid this, we employed automatic relevance detection regression (ARDR), a method that uses a single hyperparameter $\lambda_{th}$ to determine the relevance of each cluster in the model. Other ARDR hyperparameters were set to default values. To demonstrate the power of ARDR, the cutoffs in the cluster expansion were modified to 13, 8, and 6 Å, significantly increasing the number of parameters. 
+
+Using the \texttt{ARDRegression} class from \texttt{sklearn}, we performed ARDR with built-in 10-fold CV for different values of $\lambda_{th}$ ranging from $10^{-2}$ to $10^4$. For each $\lambda_{th}$, the training and CV-RMSEs were computed, along with the Akaike information criterion (AIC) and Bayesian information criterion (BIC) to evaluate model performance and complexity. The results were visualized as functions of the number of non-zero parameters in the model, allowing for analysis of feature selection and model performance.
+
+\subsection{Prediction of Ground State Structure}
+Finally, the different CE models constructed using the methods above were applied to predict the ground state structure at given Cu concentrations from a set of candidate structures. The predicted mixing energies for each candidate structure were computed using the estimated ECIs from each model using (if present) optimal hyperparameters. For the MCMC model, the frequency of each candidate structure being the ground state was calculated based on the sampled ECIs, along with the distribution of ground state energies. The results from each model were compared and discussed in terms of their ability to accurately predict the ground state structure and energy.
+
+\section{Results}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figs/au_cu_mixing_energy_vs_concentration.pdf}
+    \caption{Mixing energy as a function of Cu concentration for the Au--Cu alloy structures in the data set.}
+    \label{fig:mixing_energy_vs_concentration}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{figs/eci_comparison_ols_ridge_cov_mcmc.pdf}
+    \caption{ECIs obtained from OLS, Ridge regression, Covariance-based regularization, and MCMC sampling.}
+    \label{fig:eci_comparison_ols_ridge_cov_mcmc}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{figs/ardr_ic_vs_n_nonzero_ecis.pdf}
+    \caption{Training and CV-RMSE, AIC, and BIC as functions of the number of non-zero parameters in the ARDR model for different values of the hyperparameter $\lambda_{th}$.}
+    \label{fig:ardr_rmse_aic_bic_vs_n_nonzero_params}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{figs/gs_candidate_probabilities.pdf}
+    \caption{Predicted ground state structure probabilities from MCMC sampling along with the distributions of ground state energies.}
+    \label{fig:gs_candidate_probabilities}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figs/au_cu_gs_candidate_energies.pdf}
+    \caption{Predicted ground state energies from different CE models.}
+    \label{fig:gs_candidate_energies_comparison}
+\end{figure}
+
+\section{Discussion}
+\subsubsection*{TODO:}
+\textcolor{red}{Task 1}
+\begin{itemize}
+  \item[*] Discuss: Why is it good practice to standardize the data? Is it necessary in this case?
+\end{itemize}
+
+\textcolor{red}{Task 2}
+\begin{itemize}
+  \item Compare the CV-RMSE and size of the ECIs between OLS and Ridge. The ECIs can for instance be plotted in a bar chart.
+
+  \item[*] Discuss: What are the qualitative differences between OLS and Ridge?
+\end{itemize}
+
+\textcolor{red}{Task 3}
+\begin{itemize}
+  \item Find the hyperparameters $\gamma$ that minimizes the CV-RMSE of the model with $J_{opt, Cov}$.
+  \item Compare the CV-RMSE and the ECIs to OLS and Ridge from Task 2. 
+
+  \item[*] Discuss: What is the interpretation of having an individual parameter $\lambda_\alpha$ for each orbit? How does this compare to Ridge regression?
+  \item[*] Discuss: How does the CV-RMSE and the ECIs compare to OLS and Ridge? Can you explain it? 
+\end{itemize}
+
+\textcolor{red}{Task 4}
+\begin{itemize}
+  \item Implement the MCMC sampling of the posterior distribution.
+  \item Sample about 100-1000 uncorrelated samples (models) from the posterior distribution.
+  \item Visualize the ECIs for a MCMC chain.
+
+  \item[*] Discuss: How many parameters seems "necessary" (non-zero) according to your MCMC sampling?
+  \item[*] Discuss: What would happen if you had set your priors to something "unphysical", for instance to favor 3rd and 4th order clusters very highly?
+\end{itemize}
+
+\textcolor{red}{Task 5}
+\begin{itemize}
+  \item[*] Discuss: How many features you think is suitable to include in a final model based on your analysis.
+  \item[*] Discuss: Which ECIs are selected here? Is there a difference to OLS/Ridge/Covariance approach?
+\end{itemize}
+
+\textcolor{red}{Task 6}
+\begin{itemize}
+
+  \item Use the models that you've studied in Tasks 2-5 to predict the ground state structure and energy.
+    \item From Task 2, use OLS and the RIDGE model with optimal hyperparameter that you found. 
+    \item From Task 3, use the optimal Covariance model that you found.
+    \item From Task 4, use the cluster-expansions samples (from MCMC) and compute the frequency of each candidate structure being the ground-state.
+        \item Also plot the disitrubtion of the ground-state energy.
+    \item From Task 5, use the ARDR model with the optimal hyperparameter that you found.
+  \item Compare the results from predicting the ground state with Task 2-5 and discuss the results. 
+
+  \item[*] Discuss: Can you spot any differences between the models in predicting the ground state? Why/why not?
+  \item[*] Discuss: Which model approach do you think is the most suitable for this problem? (No right or wrong answer here; it's the discussion that's important)
+    \item[*] Discuss: In particular elaborate on the differences between automatic feature selection (such as Ridge/ARDR) and more hands-on, physical intuition based approaches (such as Covariance/Full Bayesian).
+\end{itemize}
 
 \printbibliography
 
