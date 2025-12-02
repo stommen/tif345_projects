@@ -67,7 +67,7 @@ The first methods used to estimate the ECIs were ordinary least squares (OLS) an
 %   \bm{J}_{\text{OLS}} = \min_{\bm{J}} \|\bm{X}\bm{J} - \bm{E_\text{mix}}\|_2^2 \iff\bm{J}_\text{OLS} = (\bm{X}^T \bm{X})^{-1} \bm{X}^T \bm{E_\text{mix}}.
 % \end{equation}
 This was implemented using \texttt{sklearn}'s \texttt{LinearRegression} class \cite{scikit-learn}. On the other hand, ridge regression adds an $L_2$ regularization term to the OLS objective function, which helps to prevent overfitting by penalizing large coefficients. The ridge regression objective function can be expressed as
-\begin{equation}
+\begin{equation} \label{eq:ridge}
   \bm{J}_{\text{Ridge}} = \left ( \bm{X}^T \bm{X} + \alpha \bm{I} \right )^{-1} \bm{X}^T \bm{E_\text{mix}},
 \end{equation}
 This was implemented using the \texttt{RidgeCV} class from \texttt{sklearn}, which performs ridge regression with built-in cross-validation (CV) to find the optimal regularization parameter $\alpha$ (returning OLS if $\alpha=0$) \cite{scikit-learn}. % CV splits the data into training and validation sets multiple times to evaluate the model's performance and thus select the best hyperparameter. 
@@ -130,7 +130,7 @@ Furthermore, the covariance regularized model slightly suppresses most third ord
     \caption{Training and CV-RMSE, AIC, and BIC as functions of the number of non-zero parameters in the ARDR model for different values of the hyperparameter $\lambda_{th}$.}
     \label{fig:ardr_rmse_aic_bic_vs_n_nonzero_params}
 \end{wrapfigure}
-Figure~\ref{fig:ardr_rmse_aic_bic_vs_n_nonzero_params} shows the behavior of the ARDR model as a function of the number of non zero ECIs. The training and cross validated RMSE curves have almost identical shapes and both flatten out once roughly twelve ECIs are active and remain essentially constant up to the maximum of 104 ECIs. This indicates that a small set of about a dozen ECIs is sufficient to reach the best predictive accuracy and that additional ECIs switched on by ARDR have negligible effect on the model but also do not lead to visible overfitting.
+Figure~\ref{fig:ardr_rmse_aic_bic_vs_n_nonzero_params} shows the behavior of the ARDR model as a function of the number of non zero ECIs. The training and cross validated RMSE curves have almost identical shapes and both flatten out once roughly twelve ECIs are active and remain essentially constant up to the maximum of 104 ECIs. This indicates that a small set of about a dozen ECIs is sufficient to reach the best predictive accuracy and that additional ECIs switched on by ARDR have negligible effect on the model but also do not lead to visible overfitting. Moreover, 12 ECIs (for indices 0, 1, 2, 4, 5, 6, 20, 26, 75, 83, 84, and 87) were non-zero when fittng the data to the larger cluster space.
 
 The information criteria show a consistent trend. Both AIC and BIC increase strongly when the first ECIs are added up to approximately 20 ECIs are present in the model. Beyond twenty ECIs, both criteria decrease approximately linearly with the number of active parameters. This suggests that relatively sparse ARDR models already capture the dominant interactions and that turning on many additional ECIs mainly increases model complexity without giving a clear gain in descriptive power.
 
@@ -151,7 +151,25 @@ The right panel of Figure~\ref{fig:gs_candidate_probabilities} compares the pred
 \begin{itemize}
   \item[*] Discuss: Why is it good practice to standardize the data? Is it necessary in this case?
 \end{itemize}
-The pure end members at $x_\mathrm{Cu} = 0$ and $x_\mathrm{Cu} = 1$ have mixing energies close to zero, as expected. For every intermediate composition there is a spread of mixing energies, reflecting the dependence on the underlying atomic configuration. This spread increases as the alloy becomes more mixed and is largest near $x_\mathrm{Cu} \approx 0.5$. Overall, the distributions tend to extend towards negative values, indicating that many mixed configurations are energetically favoured relative to the pure elements.
+Standardising the data means shifting each feature to zero mean and scaling it
+to unit variance. This puts all columns of the design matrix on a comparable
+scale and usually improves the conditioning of the normal equations. It also
+makes regularisation more meaningful, since a given penalty strength then acts
+in a similar way on different coefficients. Without such scaling a feature
+with very small variance needs a comparatively large coefficient in order to
+influence the prediction as much as a feature with large variance, and that
+large coefficient is then penalised more strongly in Ridge type methods even
+if both features are equally important physically.
+
+In the present problem the relevant quantities already have similar
+magnitudes. The mixing energies in
+Figure~\ref{fig:mixing_energy_vs_concentration} vary by only around a hundred
+meV per atom and the cluster functions are bounded numbers of order one.
+Standardisation would mainly rescale the ECIs without changing the qualitative
+behaviour or the predicted ground state energetics. It is therefore a
+sensible default choice in general regression settings but not strictly
+required for this particular data set.
+
 
 \textcolor{red}{Task 2}
 \begin{itemize}
@@ -159,6 +177,17 @@ The pure end members at $x_\mathrm{Cu} = 0$ and $x_\mathrm{Cu} = 1$ have mixing 
 
   \item[*] Discuss: What are the qualitative differences between OLS and Ridge?
 \end{itemize}
+
+Ridge regression differs from ordinary least squares by adding a penalty on
+the squared size of the ECIs, see Equation \ref{eq:ridge}. This extra term pulls coefficients towards
+zero, which reduces variance and makes the fit less sensitive to noise and to
+correlations between cluster functions. OLS has no such penalty and can
+therefore give larger coefficients for clusters that are only weakly
+constrained by the data.
+
+In this study the optimal Ridge parameter is
+$\alpha_\text{Ridge} \approx 0.11$. For the present scaling of the cluster vectors this value produces almost the same CV RMSE and very similar ECIs as OLS, which shows that the regularisation term only has a modest effect on the fit and mainly acts as a gentle stabilisation.
+
 
 \textcolor{red}{Task 3}
 \begin{itemize}
@@ -168,6 +197,29 @@ The pure end members at $x_\mathrm{Cu} = 0$ and $x_\mathrm{Cu} = 1$ have mixing 
   \item[*] Discuss: What is the interpretation of having an individual parameter $\lambda_\alpha$ for each orbit? How does this compare to Ridge regression?
   \item[*] Discuss: How does the CV-RMSE and the ECIs compare to OLS and Ridge? Can you explain it? 
 \end{itemize}
+
+In the covariance model each orbit has its own regularisation strength
+$\lambda_\alpha$. Through the relation
+$\lambda_\alpha = \gamma_1 r_\alpha + \gamma_2 n_\alpha$ shorter and smaller
+clusters are penalised less, while long ranged and many body clusters are
+penalised more strongly. This effectively builds a physical prior into the
+fit, since it reflects the expectation that short range pair interactions are
+most important and that higher order or very extended clusters should usually
+have smaller ECIs. This differs from Ridge regression, which uses a single
+parameter $\alpha$ that shrinks all ECIs in the same way.
+
+As presented in the results, the covariance model gives ECIs and CV RMSE
+values that are close to those of OLS and Ridge, but with noticeably smaller
+triplet terms and a slightly improved predictive error. The dominant pair
+ECIs are already well determined by the data and are only weakly affected,
+while the orbit dependent penalty mainly removes remaining freedom in weakly
+constrained higher order clusters. The qualitative picture of the energetics
+therefore remains the same, but the model becomes slightly more predictive
+and aligns better with the physical expectation that short range pair
+interactions dominate over longer range and many body terms.
+
+
+
 
 \textcolor{red}{Task 4}
 \begin{itemize}
@@ -179,11 +231,41 @@ The pure end members at $x_\mathrm{Cu} = 0$ and $x_\mathrm{Cu} = 1$ have mixing 
   \item[*] Discuss: What would happen if you had set your priors to something "unphysical", for instance to favor 3rd and 4th order clusters very highly?
 \end{itemize}
 
+The MCMC sampling shows that only a small number of ECIs are clearly different
+from zero. An ECI is here regarded as non zero if its posterior mean is more
+than three standard deviations away from zero. With this criterion seven ECIs
+stand out as non zero including the only singlet, five of the pair clusters and one
+quadruplet. The remaining coefficients are not significantly different from zero
+within their posterior uncertainty. This pattern is consistent with the physical
+expectation that short range pair interactions dominate over most higher order
+clusters.
+
+If the priors had instead been chosen in an unphysical way, for example by
+strongly favouring large third and fourth order clusters, the posterior would
+be biased towards models where many higher order ECIs take sizeable values,
+even when the data do not clearly support them. This would lead to a cluster
+expansion that is less physically reliable and where ground state predictions
+depend more on the assumed prior structure than on the DFT energies
+themselves.
+
+
+
 \textcolor{red}{Task 5}
 \begin{itemize}
   \item[*] Discuss: How many features you think is suitable to include in a final model based on your analysis.
   \item[*] Discuss: Which ECIs are selected here? Is there a difference to OLS/Ridge/Covariance approach?
 \end{itemize}
+
+For the ARDR model the cluster space was expanded compared with the earlier
+fits, from $[8, 6, 5]$ orbits of order one to four to $[13, 8, 6]$. Despite
+this larger basis the ARDR results point to a final model with only twelve
+non zero ECIs. In this range the training and cross validated RMSE have
+already flattened and the information criteria change only weakly when more
+parameters are added (see Figure $\ref{fig:gs_candidate_probabilities}$), so including twelve ECIs gives a good balance between
+accuracy and sparsity.
+
+
+
 
 \textcolor{red}{Task 6}
 \begin{itemize}
