@@ -151,24 +151,10 @@ The right panel of Figure~\ref{fig:gs_candidate_probabilities} compares the pred
 \begin{itemize}
   \item[*] Discuss: Why is it good practice to standardize the data? Is it necessary in this case?
 \end{itemize}
-Standardising the data means shifting each feature to zero mean and scaling it
-to unit variance. This puts all columns of the design matrix on a comparable
-scale and usually improves the conditioning of the normal equations. It also
-makes regularisation more meaningful, since a given penalty strength then acts
-in a similar way on different coefficients. Without such scaling a feature
-with very small variance needs a comparatively large coefficient in order to
-influence the prediction as much as a feature with large variance, and that
-large coefficient is then penalised more strongly in Ridge type methods even
-if both features are equally important physically.
+Standardising the data means shifting each feature to zero mean and scaling it to unit variance. This puts all columns of the design matrix on a comparable scale and usually improves the conditioning of the normal equations. It also makes regularisation more meaningful, since a given penalty strength then acts in a similar way on different coefficients. Without such scaling a feature with very small variance needs a comparatively large coefficient in order to influence the prediction as much as a feature with large variance, and that large coefficient is then penalised more strongly in Ridge type methods even if both features are equally important physically.
 
 In the present problem the relevant quantities already have similar
-magnitudes. The mixing energies in
-Figure~\ref{fig:mixing_energy_vs_concentration} vary by only around a hundred
-meV per atom and the cluster functions are bounded numbers of order one.
-Standardisation would mainly rescale the ECIs without changing the qualitative
-behaviour or the predicted ground state energetics. It is therefore a
-sensible default choice in general regression settings but not strictly
-required for this particular data set.
+magnitudes. The mixing energies in Figure~\ref{fig:mixing_energy_vs_concentration} vary by only around a hundred meV per atom and the cluster functions are bounded numbers of order one. Standardisation would mainly rescale the ECIs without changing the qualitative behaviour or the predicted ground state energetics. It is therefore a sensible default choice in general regression settings but not strictly required for this particular data set.
 
 
 \textcolor{red}{Task 2}
@@ -178,15 +164,9 @@ required for this particular data set.
   \item[*] Discuss: What are the qualitative differences between OLS and Ridge?
 \end{itemize}
 
-Ridge regression differs from ordinary least squares by adding a penalty on
-the squared size of the ECIs, see Equation \ref{eq:ridge}. This extra term pulls coefficients towards
-zero, which reduces variance and makes the fit less sensitive to noise and to
-correlations between cluster functions. OLS has no such penalty and can
-therefore give larger coefficients for clusters that are only weakly
-constrained by the data.
+Ridge regression differs from ordinary least squares by adding a penalty on the squared size of the ECIs, see Equation \ref{eq:ridge}. This extra term pulls coefficients towards zero, which reduces variance and makes the fit less sensitive to noise and to correlations between cluster functions. OLS has no such penalty and can therefore give larger coefficients for clusters that are only weakly constrained by the data.
 
-In this study the optimal Ridge parameter is
-$\alpha_\text{Ridge} \approx 0.11$. For the present scaling of the cluster vectors this value produces almost the same CV RMSE and very similar ECIs as OLS, which shows that the regularisation term only has a modest effect on the fit and mainly acts as a gentle stabilisation.
+In this study the optimal Ridge parameter is $\alpha_\text{Ridge} \approx 0.11$. For the present scaling of the cluster vectors this value produces almost the same CV RMSE and very similar ECIs as OLS, which shows that the regularisation term only has a modest effect on the fit and mainly acts as a gentle stabilisation.
 
 
 \textcolor{red}{Task 3}
@@ -199,24 +179,9 @@ $\alpha_\text{Ridge} \approx 0.11$. For the present scaling of the cluster vecto
 \end{itemize}
 
 In the covariance model each orbit has its own regularisation strength
-$\lambda_\alpha$. Through the relation
-$\lambda_\alpha = \gamma_1 r_\alpha + \gamma_2 n_\alpha$ shorter and smaller
-clusters are penalised less, while long ranged and many body clusters are
-penalised more strongly. This effectively builds a physical prior into the
-fit, since it reflects the expectation that short range pair interactions are
-most important and that higher order or very extended clusters should usually
-have smaller ECIs. This differs from Ridge regression, which uses a single
-parameter $\alpha$ that shrinks all ECIs in the same way.
+$\lambda_\alpha$. Through the relation $\lambda_\alpha = \gamma_1 r_\alpha + \gamma_2 n_\alpha$ shorter and smaller clusters are penalised less, while long ranged and many body clusters are penalised more strongly. This effectively builds a physical prior into the fit, since it reflects the expectation that short range pair interactions are most important and that higher order or very extended clusters should usually have smaller ECIs. This differs from Ridge regression, which uses a single parameter $\alpha$ that shrinks all ECIs in the same way.
 
-As presented in the results, the covariance model gives ECIs and CV RMSE
-values that are close to those of OLS and Ridge, but with noticeably smaller
-triplet terms and a slightly improved predictive error. The dominant pair
-ECIs are already well determined by the data and are only weakly affected,
-while the orbit dependent penalty mainly removes remaining freedom in weakly
-constrained higher order clusters. The qualitative picture of the energetics
-therefore remains the same, but the model becomes slightly more predictive
-and aligns better with the physical expectation that short range pair
-interactions dominate over longer range and many body terms.
+As presented in the results, the covariance model gives ECIs and CV RMSE values that are close to those of OLS and Ridge, but with noticeably smaller triplet terms and a slightly improved predictive error. The dominant pair ECIs are already well determined by the data and are only weakly affected, while the orbit dependent penalty mainly removes remaining freedom in weakly constrained higher order clusters. The qualitative picture of the energetics therefore remains the same, but the model becomes slightly more predictive and aligns better with the physical expectation that short range pair interactions dominate over longer range and many body terms.
 
 
 
@@ -231,22 +196,9 @@ interactions dominate over longer range and many body terms.
   \item[*] Discuss: What would happen if you had set your priors to something "unphysical", for instance to favor 3rd and 4th order clusters very highly?
 \end{itemize}
 
-The MCMC sampling shows that only a small number of ECIs are clearly different
-from zero. An ECI is here regarded as non zero if its posterior mean is more
-than three standard deviations away from zero. With this criterion seven ECIs
-stand out as non zero including the only singlet, five of the pair clusters and one
-quadruplet. The remaining coefficients are not significantly different from zero
-within their posterior uncertainty. This pattern is consistent with the physical
-expectation that short range pair interactions dominate over most higher order
-clusters.
+The MCMC sampling shows that only a small number of ECIs are clearly different from zero. An ECI is here regarded as non zero if its posterior mean is more than three standard deviations away from zero. With this criterion seven ECIs stand out as non zero including the only singlet, five of the pair clusters and one quadruplet. The remaining coefficients are not significantly different from zero within their posterior uncertainty. This pattern is consistent with the physical expectation that short range pair interactions dominate over most higher order clusters.
 
-If the priors had instead been chosen in an unphysical way, for example by
-strongly favouring large third and fourth order clusters, the posterior would
-be biased towards models where many higher order ECIs take sizeable values,
-even when the data do not clearly support them. This would lead to a cluster
-expansion that is less physically reliable and where ground state predictions
-depend more on the assumed prior structure than on the DFT energies
-themselves.
+If the priors had instead been chosen in an unphysical way, for example by strongly favouring large third and fourth order clusters, the posterior would be biased towards models where many higher order ECIs take sizeable values, even when the data do not clearly support them. This would lead to a cluster expansion that is less physically reliable and where ground state predictions depend more on the assumed prior structure than on the DFT energies themselves.
 
 
 
@@ -256,15 +208,7 @@ themselves.
   \item[*] Discuss: Which ECIs are selected here? Is there a difference to OLS/Ridge/Covariance approach?
 \end{itemize}
 
-For the ARDR model the cluster space was expanded compared with the earlier
-fits, from $[8, 6, 5]$ orbits of order one to four to $[13, 8, 6]$. Despite
-this larger basis the ARDR results point to a final model with only twelve
-non zero ECIs. In this range the training and cross validated RMSE have
-already flattened and the information criteria change only weakly when more
-parameters are added (see Figure $\ref{fig:gs_candidate_probabilities}$), so including twelve ECIs gives a good balance between
-accuracy and sparsity.
-
-
+For the ARDR model the cluster space was expanded compared with the earlier fits, from $[8, 6, 5]$ orbits of order one to four to $[13, 8, 6]$. Despite this larger basis the ARDR results point to a final model with only twelve non zero ECIs. In this range the training and cross validated RMSE have already flattened and the information criteria change only weakly when more parameters are added (see Figure $\ref{fig:gs_candidate_probabilities}$), so including twelve ECIs gives a good balance between accuracy and sparsity.
 
 
 \textcolor{red}{Task 6}
