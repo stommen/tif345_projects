@@ -11,7 +11,7 @@
 {\huge\textbf{Project 2a -- Alloy Cluster Expansions}} \\[-0.4cm]
 }
 \author{
-    \vspace{-0.4cm}
+    \vspace{-0.0cm}
     \begin{minipage}[t]{0.45\textwidth}
 \centering
 Linus Brink\\
@@ -29,10 +29,10 @@ Oscar Stommendal\\
 % \begin{center}
 %     \textbf{Abstract}
 % \end{center}
-\vspace{-1.5cm}
+\vspace{-1.3cm}
 \section{Introduction}
 To understand the laws and physics of our universe, we must start from the most fundamental building blocks. This often means starting with our beloved atoms. However, simulating materials at the atomic scale can be computationally expensive, especially for larger systems. To overcome these challenges, models that can efficiently predict material properties based on a limited set of atomic-scale calculations are essential. One such model is the alloy cluster expansion (CE), which provides a systematic way to represent the energetics of alloy systems on a lattice. By expressing the total energy as a sum over contributions from clusters of atoms, CE allows for efficient exploration of configuration space and prediction of properties. This project explores different methods for constructing a CE model for the Au--Cu alloy, ranging from the completely uninformative prior of OLS to a full Bayesian analysis where the prior hyperparameters are sampled as well. The different CE models are then applied to the problem of predicting the ground state structure amongst a few different candidates.%using various levels of physical intuition in the model construction process. This intuition will be instilled through more and more complex priors,
-\vspace{-0.5cm}
+% \vspace{-0.5cm}
 \section{Theory}
 One widely used theory for atomic-scale calculations is the density functional theory (DFT) \cite{kohn1965self}. This provides the total energy $E_{\text{structure}}$ of a given atomic configuration. For alloy systems, however, it is convenient to instead work with the mixing energy per atom, measuring the energy relative to the pure elements. % For an Au--Cu structure,
 % \begin{equation}
@@ -59,8 +59,9 @@ The data consisted of DFT-calculated mixing energies and corresponding atomic st
 while including too many can lead to overfitting. %(similarly, this means that the model is too complex and captures noise in the data instead of the underlying trends)
 In this project (except for the ARDR method) we considered clusters up to and including 4-body clusters with cutoffs 8, 6 and 5 Å for 2-, 3- and 4-body clusters, respectively.
 
-Using the \texttt{ClusterSpace} and \texttt{StructureContainer} classes from \texttt{icet}, cluster vectors $\bm{X}$ and mixing energies $\bm{E}$ were generated for all structures \cite{angqvist2019icet}. For an initial picture of the data, the mixing energy as a function of the Cu concentration was plotted. For further analysis, $\bm{E}$ and $\bm{X}$ were standardized to have zero mean and unit variance using the \texttt{StandardScaler} class from \texttt{sklearn} \cite{scikit-learn}. This is a common practice in machine learning to ensure that all features are on the same scale, which can improve the regression results \cite{scikit-learn}. However, in this case, since the cluster vectors are already on similar scales, standardization is most likely not strictly necessary.
-\vspace{-0.5cm}
+Using the \texttt{ClusterSpace} and \texttt{StructureContainer} classes from \texttt{icet}, cluster vectors $\bm{X}$ and mixing energies $\bm{E}$ were generated for all structures \cite{angqvist2019icet}. % For an initial picture of the data, the mixing energy as a function of the Cu concentration was plotted. 
+For further analysis, $\bm{E}$ and $\bm{X}$ were standardized to have zero mean and unit variance using the \texttt{StandardScaler} class from \texttt{sklearn} \cite{scikit-learn}. This is a common practice in machine learning to ensure that all features are on the same scale, which can improve the performance of regression algorithms \cite{scikit-learn}. % However, in this case, since the cluster vectors are already on similar scales, standardization is most likely not strictly necessary.
+% \vspace{-0.5cm}
 \subsection{Estimation of \texorpdfstring{$\bm{J}$}{J} Using OLS and Ridge Regression}
 The first methods used to estimate the ECIs were ordinary least squares (OLS) and ridge regression. OLS provides a simple and straightforward approach to estimate the ECIs by minimizing the sum of squared residuals between the predicted and actual mixing energies. % This can be described mathematically as
 % \begin{equation}
@@ -73,47 +74,51 @@ This was implemented using \texttt{sklearn}'s \texttt{LinearRegression} class \c
 This was implemented using the \texttt{RidgeCV} class from \texttt{sklearn}, which performs ridge regression with built-in cross-validation (CV) to find the optimal regularization parameter $\alpha$ (returning OLS if $\alpha=0$) \cite{scikit-learn}. % CV splits the data into training and validation sets multiple times to evaluate the model's performance and thus select the best hyperparameter. 
 Due to the small data set, 10-fold CV was used. %, meaning that the data was randomly split into 10 subsets, and the model was trained on 9 subsets and validated on the remaining one, repeating this process 10 times.
 After estimating the ECIs using OLS and ridge regression, the models were evaluated using the root-mean-square error (RMSE). Also, the ECIs obtained from both methods were compared to analyze the effect of regularization on the model parameters.
-\vspace{-0.5cm}
+% \vspace{-0.5cm}
 \subsection{Estimation of \texorpdfstring{$\bm{J}$}{J} Using Covariance-based Regularization}
 Similarly to ridge regression, covariance-based regularization uses prior knowledge to regularize the estimation of the ECIs. However, instead of using a single regularization parameter $\alpha$, this method defines individual regularization parameters for each ECI based on physical intuition about the system. This can be expressed mathematically as
 \begin{equation}
   \bm{J}_{\text{Cov}} = \left ( \bm{X}^T \bm{X} + \bm{\Lambda} \right )^{-1} \bm{X}^T \bm{E_\text{mix}},
 \end{equation}
 where $\bm{\Lambda}$ is the diagonal covariance matrix containing the individual regularization parameters $\lambda_\alpha$ for each cluster $\alpha$. The values of $\lambda_\alpha$ were determined based on the physical intuition that larger clusters with more sites should have smaller contributions to the mixing energy. Thus, $\lambda_\alpha$ was defined as $\lambda_\alpha = \gamma_1 r + \gamma_2 n$, where $r$ is the cluster radius, $n$ the number of cluster sites, and $\bm{\gamma} \equiv (\gamma_1, \gamma_2)$ is the hyperparameter vector that controls the regularization strength. To find the optimal $\bm{\gamma}$, the CV-RMSE was minimized using the \texttt{minimize} function from \texttt{scipy.optimize} \cite{2020SciPy-NMeth}, again using 10-fold CV. 
-\vspace{-0.5cm}
+% \vspace{-0.5cm}
 \subsection{Estimation of \texorpdfstring{$\bm{J}$}{J} Using Full Bayesian Inference with MCMC}
+% \vspace{-0.1cm}
 Using a Bayesian approach, the ECIs can be estimated by sampling from the logarithm of the posterior distribution of the parameters given the data. This was done using Markov chain Monte Carlo (MCMC) sampling using \texttt{emcee} \cite{emcee}. Following Bayes' theorem, the posterior can be expressed as the product of the likelihood and the prior. For $\bm{E}$, Gaussian noise was assumed, with the standard deviation of the systematic noise $\sigma_{\text{sys}}$ as a hyperparameter.
 % \begin{equation}
 %   P(\bm{E} | \bm{J}, \sigma_{\text{sys}}) = \mathcal{N}(\bm{E} | \bm{X}\bm{J}, \sigma_{\text{sys}}^2 \bm{I}) \equiv \frac{1}{(2 \pi \sigma_{\text{sys}}^2)^{N/2}} \exp \left ( -\frac{1}{2 \sigma_{\text{sys}}^2} \|\bm{E} - \bm{X}\bm{J}\|_2^2 \right ),
 % \end{equation}
-For the prior, we assumed a Gaussian prior with standard deviation $\alpha$ for the ECIs, and inverse-gamma priors for the hyperparameters $\sigma_{\text{sys}}$ and $\alpha$. 
+For the prior, a Gaussian prior with standard deviation $\alpha$ was assumed for the ECIs, and inverse-gamma priors for the hyperparameters $\sigma_{\text{sys}}$ and $\alpha$. 
 % \begin{equation}
 %   P(\bm{J}, \sigma_{\text{sys}}, \alpha) = \mathcal{N}(\bm{J} | 0, \alpha^2 \bm{I}) \cdot \mathcal{IG}(\sigma_{\text{sys}} | a=2, b=0.05) \cdot \mathcal{IG}(\alpha | a=2, b=0.1).
 % \end{equation}
-For the hyperparameters, we used the inverse-gamma parameters $\{a=2, b=0.05\}$ for $\sigma_\text{sys}$ and $\{a=2, b=0.1\}$ for $\alpha$. Furthermore, prior knowledge resulted in the bounds $\sigma_{\text{sys}} \in [0.02, 2]$ and $\alpha \in [0.05, 0.5]$, which were enforced during sampling. 
+% For the hyperparameters, we used the inverse-gamma parameters $\{a=2, b=0.05\}$ for $\sigma_\text{sys}$ and $\{a=2, b=0.1\}$ for $\alpha$. Furthermore, prior knowledge resulted in the bounds $\sigma_{\text{sys}} \in [0.02, 2]$ and $\alpha \in [0.05, 0.5]$, which were enforced during sampling. 
 
 The posterior was sampled using 100 walkers (initialized with small random perturbations around 0) and 4\,000 steps, discarding the first 3\,000 steps as burn-in after trace plots confirmed convergence. The resulting 1000 samples were used to plot the ECIs for the MCMC chains and to analyze the number of significant (non-zero) ECIs.
-\vspace{-0.5cm}
+% \vspace{-0.5cm}
 \subsection{Automatic Relevance Detection Regression (ARDR)}
-The previous methods required some level of manual work in selecting hyperparameters or regularization strengths. To avoid this, we employed automatic relevance detection regression (ARDR), a method that uses a single hyperparameter $\lambda_{th}$ to determine the relevance of each cluster in the model. Other ARDR hyperparameters were set to default values. To demonstrate the power of ARDR, the cutoffs in the cluster expansion were modified to 13, 8, and 6 Å, significantly increasing the number of parameters. 
+% \vspace{-0.1cm}
+The previous methods required some manual work in selecting hyperparameters or regularization. To avoid this, we employed automatic relevance detection regression (ARDR) that uses a single hyperparameter $\lambda_{th}$ to determine the relevance of each cluster in the model. To demonstrate the power of ARDR, the cutoffs in the cluster expansion were modified to 13, 8, and 6 Å, significantly increasing the number of parameters. 
 
 Using the \texttt{ARDRegression} class from \texttt{sklearn}, we performed ARDR with built-in 10-fold CV for different values of $\lambda_{th}$ ranging from $10^{-2}$ to $10^4$. For each $\lambda_{th}$, the training and CV-RMSEs were computed, along with the Akaike information criterion (AIC) and Bayesian information criterion (BIC) to evaluate model performance and complexity. The results were visualized as functions of the number of non-zero parameters in the model, allowing for analysis of feature selection and model performance.
-\vspace{-0.5cm}
+% \vspace{-0.5cm}
 \subsection{Prediction of Ground State Structure}
-Finally, the different CE models constructed using the methods above were applied to predict the ground state structure at given Cu concentrations from a set of candidate structures. The predicted mixing energies for each candidate structure were computed using the estimated ECIs from each model using (if present) optimal hyperparameters. For the MCMC model, the frequency of each candidate structure being the ground state was calculated based on the sampled ECIs, along with the distribution of ground state energies. The results from each model were compared and discussed in terms of their ability to accurately predict the ground state structure and energy.
-
+% \vspace{-0.1cm}
+Finally, the different CE models were applied to predict the ground state structure at given Cu concentrations from a set of candidate structures. The predicted mixing energies for each candidate structure were computed using the estimated ECIs from each model with (if present) optimal hyperparameters. For the MCMC model, the frequency of each candidate structure being the ground state was calculated based on the sampled ECIs, along with the distribution of ground state energies. % The results from each model were compared and discussed in terms of their ability to accurately predict the ground state structure and energy.
+% \vspace{-0.6cm}
 \section{Results}
-\begin{wrapfigure}{r}{0.45\textwidth}
+% \vspace{-0.2cm}
+Firstly, Figure~\ref{fig:mixing_energy_vs_concentration} shows the mixing energies for all structures as a function of Cu concentration, and Figure~\ref{fig:eci_comparison_ols_ridge_cov_mcmc} the fitted ECIs for all orbits. For the pairs, all four methods give similar ECIs, with a few dominant interactions. This indicates that a small number of pair terms controls the energetics and is constrained by the data. For the triplet and quadruplets, the ECIs are much smaller and many ECIs are close to zero. OLS and Ridge are almost identical, consistent with the optimal Ridge parameter $\alpha^\star_\text{Ridge} \approx 0.11$ and CV-RMSEs of $2.83$ and $2.82$ meV per atom. The small value of $\alpha_\text{Ridge}$ means that the Ridge penalty is weak, so the Ridge ECIs remain close to the OLS solution.
+
+\begin{wrapfigure}{r}{0.43\textwidth}
     \centering
-    \vspace{-0.7cm}
-    \includegraphics[width=0.44\textwidth]{figs/au_cu_mixing_energy_vs_concentration.pdf}
+    \vspace{-0.2cm}
+    \includegraphics[width=0.42\textwidth]{figs/au_cu_mixing_energy_vs_concentration.pdf}
+    \vspace{-0.35cm}
     \caption{Mixing energy as a function of Cu concentration for all Au--Cu structures in the database.}
     \label{fig:mixing_energy_vs_concentration}
 \end{wrapfigure}
-
-Firstly, Figure~\ref{fig:mixing_energy_vs_concentration} shows the DFT mixing energies for all Au--Cu structures in the database as a function of Cu concentration. Next, Figure~\ref{fig:eci_comparison_ols_ridge_cov_mcmc} shows the fitted ECIs $J_\alpha$ for all orbits grouped by cluster order. For the pair (order two) clusters all four methods give very similar ECIs, with a few dominant interactions of clearly largest magnitude. This indicates that a small number of pair terms largely controls the energetics and is well constrained by the data. For the triplet and quadruplet clusters the ECIs are much smaller and many orbits are close to zero. OLS and Ridge are almost identical, which is consistent with the found optimal Ridge parameter $\alpha^\star_\text{Ridge} \approx 0.11$ and CV-RMSEs of $2.83$ and $2.82$ meV per atom. The small value of $\alpha_\text{Ridge}$ means that the Ridge penalty is weak, so the Ridge ECIs remain very close to the OLS solution.
-
-Furthermore, the covariance regularized model slightly suppresses most third order ECIs through the variable penalty term $\lambda_\alpha = \gamma_1 r_\alpha + \gamma_2 n_\alpha$ with optimal $\gamma_1 \approx 0.136$ and $\gamma_2 \approx 0.057$, which penalizes larger and more extended clusters. This mild additional shrinkage lowered the CV-RMSE to $2.65$\,meV per atom and mainly resolves remaining degeneracies between similar parameter combinations rather than changing the dominant pair interactions. The MCMC mean ECIs follow the same overall pattern as the OLS and Ridge results. Sampling revealed that the systematic noise has a mean value of $\sigma_{\text{sys}} \approx 2.47$\,meV per atom, indicating that the model is not able to perfectly reproduce the DFT data. Moreover, only 7 parameters (for indices 0, 1, 2, 4, 5, 6, and 20) don't include zero within three standard deviations of the posterior samples, indicating that only a small number of ECIs are truly significant in the MCMC model.
+Furthermore, the covariance model slightly suppresses most third order ECIs through the variable penalty term $\lambda_\alpha$, with optimal $\bm{\gamma} \approx (0.136, 0.057)$, penalizing larger and more extended clusters. This lowered the CV-RMSE to $2.65$\,meV per atom and mainly resolves remaining degeneracies between similar parameter combinations rather than changing the dominant pair interactions. The MCMC mean ECIs follow the same overall pattern as the OLS and Ridge results. Sampling revealed that the systematic noise has a mean value of $\sigma_{\text{sys}} \approx 2.47$\,meV per atom, indicating that the model is not able to perfectly reproduce the DFT data. Moreover, only 7 parameters (for indices 0, 1, 2, 4, 5, 6, and 20) don't include zero within three standard deviations of the posterior samples, indicating that only a small number of ECIs are truly significant in the MCMC model.
 
 \begin{figure}[H]
     \centering
@@ -123,21 +128,37 @@ Furthermore, the covariance regularized model slightly suppresses most third ord
     \label{fig:eci_comparison_ols_ridge_cov_mcmc}
 \end{figure}
 
+Figure~\ref{fig:ardr_rmse_aic_bic_vs_n_nonzero_params} shows the behavior of the ARDR model as a function of the number of non zero ECIs. The training and cross validated RMSE curves have almost identical shapes and both flatten out once roughly fifteen ECIs are active and remain essentially constant up to the maximum of 104 ECIs. This indicates that a small set of about a dozen ECIs is sufficient to reach the best predictive accuracy and that additional ECIs switched on by ARDR have negligible effect on the model but also do not lead to visible overfitting. Moreover, 12 ECIs (for orbit indices 0, 1, 2, 4, 5, 6, 20, 26, 75, 83, 84, and 87) were non-zero when fitting the data to the larger cluster space.
+
+The information criteria shows a consistent trend. Both AIC and BIC increase strongly when the first ECIs are added up to approximately 20 ECIs are present in the model. Beyond twenty ECIs, both criteria decrease approximately linearly with the number of active parameters. This suggests that relatively sparse ARDR models already capture the dominant interactions and that turning on many additional ECIs mainly increases model complexity without giving a clear gain in descriptive power.
 \begin{wrapfigure}{r}{0.5\textwidth}
     \centering
-    \vspace{-0.7cm}
+    \vspace{-0.3cm}
     \includegraphics[width=0.49\textwidth]{figs/ardr_ic_vs_n_nonzero_ecis.pdf}
+    \vspace{-0.4cm}
     \caption{Training and CV-RMSE, AIC, and BIC as functions of the number of non-zero parameters in the ARDR model for different values of the hyperparameter $\lambda_{th}$.}
     \label{fig:ardr_rmse_aic_bic_vs_n_nonzero_params}
 \end{wrapfigure}
-Figure~\ref{fig:ardr_rmse_aic_bic_vs_n_nonzero_params} shows the behavior of the ARDR model as a function of the number of non zero ECIs. The training and cross validated RMSE curves have almost identical shapes and both flatten out once roughly twelve ECIs are active and remain essentially constant up to the maximum of 104 ECIs. This indicates that a small set of about a dozen ECIs is sufficient to reach the best predictive accuracy and that additional ECIs switched on by ARDR have negligible effect on the model but also do not lead to visible overfitting. Moreover, 12 ECIs (for indices 0, 1, 2, 4, 5, 6, 20, 26, 75, 83, 84, and 87) were non-zero when fittng the data to the larger cluster space.
-
-The information criteria show a consistent trend. Both AIC and BIC increase strongly when the first ECIs are added up to approximately 20 ECIs are present in the model. Beyond twenty ECIs, both criteria decrease approximately linearly with the number of active parameters. This suggests that relatively sparse ARDR models already capture the dominant interactions and that turning on many additional ECIs mainly increases model complexity without giving a clear gain in descriptive power.
-
-Figure~\ref{fig:gs_candidate_probabilities} shows the MCMC predictions for the ground state. The lower left panel gives the distribution of ground state energies obtained from the posterior samples. The histogram peaks close to $-120$\,meV per atom and then decreases towards lower energies, while almost no samples have ground state energies higher than the peak value. The dashed line marks the mean value of about $-131.5$\,meV per atom. The upper left panel shows the probability for each candidate structure to be the ground state. Only candidates $4$, $28$ and $29$ appear as ground states in the samples, with candidate $29$ being most likely. This means that only a small subset of structures is competitive as the ground state within the range of cluster expansions explored by the MCMC sampling.
-
-The right panel of Figure~\ref{fig:gs_candidate_probabilities} compares the predicted ground state mixing energies from the different CE models as a function of Cu concentration. Overall, the four models follow almost identical trends and give very similar ground state energies at most compositions, which shows that the choice of regularization or feature selection has only a modest effect on the predicted energetics. There are, however, a few noticeable differences. At the third lowest Cu concentration the OLS and Ridge models predict a ground state energy that is about eight meV per atom lower than the corresponding energies from the covariance and ARDR models, which agree closely with each other. At the third highest Cu concentration the covariance model gives the lowest ground state energy, roughly four meV per atom below OLS and Ridge, while the ARDR model predicts a significantly higher lowest energy, about twenty four meV per atom above OLS and Ridge. These deviations indicate that the different regularization schemes mainly affect a small number of compositions, while the overall shape of the ground state mixing energy curve is robust across all models.
-
+Figure~\ref{fig:gs_candidate_probabilities} shows the predictions for the ground state. The lower left panel gives the distribution of ground state energies obtained from the posterior samples. The histogram peaks close to $-120$\,meV per atom and decreases towards lower energies, while almost no samples have ground state energies higher than the peak value. The dashed line marks the mean value of about $-131.5$\,meV per atom. The upper left panel shows the probability for each candidate structure to be the ground state. Only candidates $4$, $28$ and $29$ appear, with candidate $29$ being most likely. % This means that only a small subset of structures is competitive as the ground state within the range of cluster expansions explored by the MCMC sampling.
+The right panel of Figure~\ref{fig:gs_candidate_probabilities} compares the predicted ground state mixing energies from the different models. Overall, the four models follow almost identical trends and give very similar ground state energies at most compositions, showing that the choice of regularization or feature selection has only a modest effect on the predicted energetics. Table~\ref{tab:ground} summarizes the predicted ground state structures and energies for these models. 
+\vspace{-0.2cm}
+\begin{table}[H]
+    \centering
+    \caption{Predicted ground state structures and mixing energies from different models.}
+    \vspace{0.2cm}
+    \begin{tabular}{l c c c c}
+        \toprule
+        \textbf{Model} & OLS & Ridge & Covariance & ARDR \\
+        \midrule
+        \textbf{Cu concentration at GS (\%)} & 50 & 50 & 75 & 50 \\
+        \textbf{Predicted GS structure} & 4 & 4 & 29 & 4 \\
+        \textbf{Predicted GS mixing energy (meV/atom)} & -117.0 & -116.6 & -121.0 & -118.2 \\
+        \bottomrule
+    \end{tabular}
+    \vspace{0.2cm}
+    \label{tab:ground}
+\end{table}
+\vspace{-0.7cm}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.99\textwidth]{figs/gs_energy_distribution_predictions_and_id_probabilities.pdf}
@@ -166,7 +187,7 @@ magnitudes. The mixing energies in Figure~\ref{fig:mixing_energy_vs_concentratio
 
 Ridge regression differs from ordinary least squares by adding a penalty on the squared size of the ECIs, see Equation \ref{eq:ridge}. This extra term pulls coefficients towards zero, which reduces variance and makes the fit less sensitive to noise and to correlations between cluster functions. OLS has no such penalty and can therefore give larger coefficients for clusters that are only weakly constrained by the data.
 
-In this study the optimal Ridge parameter is $\alpha_\text{Ridge} \approx 0.11$. For the present scaling of the cluster vectors this value produces almost the same CV RMSE and very similar ECIs as OLS, which shows that the regularisation term only has a modest effect on the fit and mainly acts as a gentle stabilisation.
+In this study the optimal Ridge parameter is $\alpha_\text{Ridge} \approx 0.11$. For the present scaling of the cluster vectors this value produces almost the same CV RMSE and very similar ECIs as OLS, which shows that the regularization term only has a modest effect on the fit and mainly acts as a gentle stabilization.
 
 
 \textcolor{red}{Task 3}
@@ -182,8 +203,6 @@ In the covariance model each orbit has its own regularisation strength
 $\lambda_\alpha$. Through the relation $\lambda_\alpha = \gamma_1 r_\alpha + \gamma_2 n_\alpha$ shorter and smaller clusters are penalised less, while long ranged and many body clusters are penalised more strongly. This effectively builds a physical prior into the fit, since it reflects the expectation that short range pair interactions are most important and that higher order or very extended clusters should usually have smaller ECIs. This differs from Ridge regression, which uses a single parameter $\alpha$ that shrinks all ECIs in the same way.
 
 As presented in the results, the covariance model gives ECIs and CV RMSE values that are close to those of OLS and Ridge, but with noticeably smaller triplet terms and a slightly improved predictive error. The dominant pair ECIs are already well determined by the data and are only weakly affected, while the orbit dependent penalty mainly removes remaining freedom in weakly constrained higher order clusters. The qualitative picture of the energetics therefore remains the same, but the model becomes slightly more predictive and aligns better with the physical expectation that short range pair interactions dominate over longer range and many body terms.
-
-
 
 \textcolor{red}{Task 4}
 \begin{itemize}
@@ -229,6 +248,9 @@ covariance model shrinks them in an orbit dependent way, but in all three cases 
   \item[*] Discuss: Which model approach do you think is the most suitable for this problem? (No right or wrong answer here; it's the discussion that's important)
     \item[*] Discuss: In particular elaborate on the differences between automatic feature selection (such as Ridge/ARDR) and more hands-on, physical intuition based approaches (such as Covariance/Full Bayesian).
 \end{itemize}
+In general, all four models give similar predictions for the ground state energetics and structure. This similarity indicates that the regularization differences do not drastically affect the predicted ground states and that  One notable difference is that the MCMC model predicts only three candidate structures as possible ground states, while the other models give a continuous ground state energy curve for different compositions. This reflects the uncertainty in the MCMC sampling and shows that only a small subset of structures is competitive within the explored parameter space.
+
+There are, however, a few noticeable differences. At the third lowest Cu concentration the OLS and Ridge models predict a ground state energy that is about eight meV per atom lower than the corresponding energies from the covariance and ARDR models, which agree closely with each other. At the third highest Cu concentration the covariance model gives the lowest ground state energy, roughly four meV per atom below OLS and Ridge, while the ARDR model predicts a significantly higher lowest energy, about twenty four meV per atom above OLS and Ridge. These deviations indicate that the different regularization schemes mainly affect a small number of compositions, while the overall shape of the ground state mixing energy curve is robust across all models.
 
 \printbibliography
 
