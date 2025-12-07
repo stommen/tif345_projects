@@ -31,5 +31,32 @@ Oscar Stommendal\\
 % \end{center}
 \vspace{-1.5cm}
 \section{Introduction}
+Despite our never-ending love for physics, we can not deny the mental fatigue that comes with simulating and understanding complex systems. As the systems grow in complexity, so does the computational cost of simulating them. This is especially true in the field of material science, where we often want to understand the properties of materials at the atomic scale. To overcome this challenge, we can use surrogate models that approximate the behavior of the system based on a limited number of simulations. One such approach is Bayesian Optimization (BO), which combines probabilistic modeling with optimization techniques to efficiently explore the parameter space. In this project, we apply BO to model the energy landscape of an ad-atom on a gold-surface. By using Gaussian Processes (GPs) as our surrogate model, we aim to predict the energy of the ad-atom at unobserved locations on the surface, while minimizing the number of expensive energy calculations required. This report details our methodology, results, and insights gained from applying BO to this problem.
+
+\section{Theory}
+For an ad-atom on a surface, its energy $E$ can be expressed as 
+\begin{equation}
+E = E_{\text{ad}} - E_{\text{surface}},
+\end{equation} 
+where $E_\text{surface}$ is the energy of the bare surface and $E_\text{ad}$ is the energy of the combined system. If we consider the surface to be completely rigid, the energy landscape of the ad-atom can be described as a function of its position $(x, y, z)$ on the surface. By fixing the height $z$ to its local minimum given $(x, y)$, we can reduce the problem to a two-dimensional energy landscape $E(x, y)$. By combining GPs with BO, we can efficiently model this energy landscape and predict the energy at unobserved locations, while minimizing the number of expensive energy calculations required.
+
+\section{Methodology}
+In this project, we consider a gold (Au) structure with Miller indices (433) and an ad-atom of gold placed on its surface. The energy of the ad-atom is calculated using the Atomic Simulation Environment (ASE) package using the Effective Medium Theory (EMT) potential \cite{ase-paper}. As outlined in the introduction, we model the energy landscape of the ad-atom as a function of its position $(x, y)$ on the surface, while keeping its height $z$ fixed at the local minimum for each $(x, y)$ pair, i.e., 
+\begin{equation}
+E(x, y) = \min_z E(x, y, z).
+\end{equation}
+To perform the minimization over $z$, we use a scalar optimization method from the \texttt{SciPy} library to find the local minimum of the energy with respect to $z$ for each fixed $(x, y)$ pair \cite{2020SciPy-NMeth}. Furthermore, when searching for the optimal ad-atom position, the energy landscape will repeat itself due to the periodicity of the crystal structure. Therefore, we only need to consider a single unit cell of the surface, i.e., the domain
+\begin{equation}
+    0 < x < 16.65653 \quad \land \quad 0 < y < 2.884996.
+\end{equation}
+We used a step size of 0.1 \AA{} in both $x$ and $y$ directions when creating the grid of possible ad-atom positions, resulting in a (29 x 167) grid. 
+
+For an initial picture of the energy landscape, it was plotted over the entire grid. From this, the approximate position of the global minimum could be identified for further comparison and analysis. Next, we applied local search using \texttt{SciPy}, specifically L-BFGS-B, to investigate the performance of regular gradient-based optimization on this energy landscape. The algorithm was initialized at 500 random positions within the unit cell, and the number of times it converged to the global minimum was recorded. 
+
+\section{Results}
+
+\section{Discussion}
+
+\printbibliography
 
 \end{document}
