@@ -82,6 +82,19 @@ Figure~Ä compares the energy along the linear transition path between the globa
 
 
 \section{Discussion}
+The appearance of the PES in Figure~X explains why the optimization problem can be demanding. Many narrow minima are spread over the unit cell and the global minimum does not stand out clearly by shape alone. Only a small fraction of the domain lies close to the global minimum, which means that a method that only follows local gradients is expected to reach it from relatively few starting positions.
+
+The Bayesian optimization traces in Figure~Y show that the GP based search can still identify the global minimum efficiently. Write about the betas that worked...
+
+For the values of $\beta$ that succeed, the sampled energy reaches the global minimum early, then moves away again while other parts of the PES are explored, and then finally returns to converge at the global minimum. This behavior matches the idea behind the LCB acquisition function, where low predicted energy and high uncertainty are both rewarded. After the first visit the minimum looks very good in terms of mean energy, but unexplored wells still have enough uncertainty to be tested before the search settles. The dependence on $\beta$ reflects the balance between these two effects. A smaller $\beta$ favors exploitation, increasing the chance to stay around already discovered low-energy regions and thus shortening the exploration time, but it also increases the risk of remaining trapped in a local well. A larger $\beta$ instead favors exploration and improves the chance of visiting the global minimum at least once, but can give too much weight to uncertainty and spend many evaluations in high-energy regions that are unlikely to contain the global minimum. Hopefully this shows somewhat in the figures...
+
+The spatial plots in Figure~Z help to interpret this behavior. The predictive uncertainty is low near sampled positions and especially around minima that have been revisited, while it remains high in regions that were never chosen by the acquisition function. High acquisition values appear where low predicted energy and nonzero uncertainty coincide, which is mainly in and around the wells that contain sampled points. Regions that are clearly high in energy receive low acquisition values even if they remain unsampled. This pattern shows that the combined GP and LCB scheme focuses evaluations on low-energy regions that already contain samples, while largely ignoring unsampled regions that are clearly high in energy.
+
+The general GP model in Task~4 addresses a different goal, namely to approximate the full PES rather than only to locate the global minimum. The RMSE in Figure~Å decreases rapidly for the first 80 samples and then levels off around a few hundredths of an eV after about 120 samples, which suggests that the main structure of the PES has been captured and that additional data mainly refine the model. This means that the optimal amount of training samples likely is around 120, maybe even as early as 80. 
+
+The comparison of the transition path in Figure~Ä supports this view. The BO based GP is very accurate close to the global minimum, where most of its samples lie, while the general GP, trained on a broader set of points, follows the reference energy more closely along the entire path.
+
+
 
 \printbibliography
 
