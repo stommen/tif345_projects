@@ -54,6 +54,32 @@ We used a step size of 0.1 \AA{} in both $x$ and $y$ directions when creating th
 For an initial picture of the energy landscape, it was plotted over the entire grid. From this, the approximate position of the global minimum could be identified for further comparison and analysis. Next, we applied local search using \texttt{SciPy}, specifically L-BFGS-B, to investigate the performance of regular gradient-based optimization on this energy landscape. The algorithm was initialized at 500 random positions within the unit cell, and the number of times it converged to the global minimum was recorded. 
 
 \section{Results}
+Figure~X shows the potential energy surface $E(x,y)$ of the Au ad-atom evaluated on the $29 \times 167$ grid over the primitive cell. 
+The energy varies between roughly $7.05$ and $8.1$~eV, with several local minimas and maximas in a reoccuring pattern. The pattern breaks for $x \lesssim 5$, where the global extremes appear. The global minima is located at $(3.31, 0.72)$ with an energy of $E_\text{min} = 7.0783$\,eV. The region around the global minimum is rather small as it is narrow in $x$ and moderately extended in $y$. 
+
+\textcolor{red}{Insert Figure 1 of PES for task 1}
+
+Something about task 2...
+
+Figure~Y shows, for each value of $\beta$, the energy of the sampled position $(x,y)$ at each Bayesian optimisation iteration. The dashed horizontal line marks the global minimum energy obtained from the full PES. For all $\beta$ values that manage to locate the global minimum, the model reaches this energy level relatively early in the run, but then leaves the minimum again and explores other regions of the energy landscape before eventually returning to the global minimum and converging there.
+
+Something about which one is "best" and how beta affects the convergence...
+
+\textcolor{red}{Insert Figure of sampling for different betas from task 3}
+
+Figure~Z illustrates the final BO GP model for the optimal $\beta$ that converged to the global minimum the fastest. The left panel shows the predicted mean energy over the domain together with the sampled positions and the known global minimum. Most sampled positions lie in low energy regions, with a dense cluster in the well that contains the global minimum. The middle panel shows the predictive standard deviation (uncertainty) $\sigma$. The uncertainty is small in areas that contain many sampled positions, generally around the minimas (especially the global minimum), and larger in regions that have not been visited. The right panel displays the value of the LCB acquisition function for the same model. It basically shows the opposite of the ucnertainty. High acquisition values occur in the low energy region surrounding the minimas where the data has been, and low where it has not.
+
+\textcolor{red}{Insert Figure over optimal beta + variance + aquisition function + data points from task 3}
+
+Figure~Å shows the root mean square error (RMSE) of the general GP model evaluated on the full PES as a function of the number of training samples. The RMSE starts at about $0.30$\,eV for very small training sets and decreases as more samples are added, where the most rapid improvement occurs during the first $\sim 80$ samples. After $\sim 120$ the curve has basically flattend around $0.02$–$0.03$\,eV until 200 training samples, which indicates that the model has captured the main structure of the PES.
+
+\textcolor{red}{Insert Figure with the RMSE from task 4}
+
+Figure~Ä compares the energy along the linear transition path between the global minimum ($\lambda = 0$) and the local energy minimum around $(11, 2.1)$ ($\lambda = 1$) between the BO and general GP with the target energy along the path computed with EMT. The BO GP model starts identically to the target with basically no uncertainty around the global minimum, but shows a higher energy for both the first local maximum and minimum, followed by combining the next two maxima and the minimum into one larger maximum with a large uncertainty. The BO GP model is very good close to the global minimum, but smoothes the rest of the path. The general GP is slightly worse at the global minimum but keeps a very low differential to the target with a lower uncertainty throughout the path, being a lot better overall.
+
+\textcolor{red}{Insert Figure with the two models and the actual energy from task 4}
+
+
 
 \section{Discussion}
 
