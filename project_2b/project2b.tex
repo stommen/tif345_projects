@@ -48,15 +48,18 @@ In this project, we consider a gold (Au) structure with Miller indices (433) and
 \begin{equation}
 E(x, y) = \min_z E(x, y, z).
 \end{equation}
-The minimization, or relaxation, over $z$ was performed using the BFGS algorithm implemented in ASE. Furthermore, when searching for the optimal ad-atom position, the energy landscape will repeat itself due to the periodicity of the crystal structure. Therefore, we only need to consider a single unit cell of the surface, i.e., the domain
-\begin{equation}
-    0 < x < 16.65653 \quad \land \quad 0 < y < 2.884996.
-\end{equation}
-We used a step size of 0.02 \AA{} in both $x$ and $y$ directions when creating the grid of possible ad-atom positions, resulting in a (145 x 833) grid. 
+The minimization, or relaxation, over $z$ was performed using the BFGS algorithm implemented in ASE. Furthermore, when searching for the optimal ad-atom position, the energy landscape will repeat itself due to the periodicity of the crystal structure. Therefore, we only need to consider a single unit cell of the surface, i.e., $0 < x\,(\si{\angstrom}) < 16.65653$ and $0 < y\,(\si{\angstrom}) < 2.884996$. We used a step size of 0.02 \AA{} in both $x$ and $y$ directions when creating the grid of possible ad-atom positions, resulting in a (145 x 833) grid. For an initial picture of the energy landscape, it was plotted over the entire grid. From this, the approximate position of the global minimum could be identified for further comparison and analysis. Next, we applied local search using \texttt{SciPy}, specifically L-BFGS-B, to investigate the performance of regular gradient-based optimization on this energy landscape \cite{2020SciPy-NMeth}. The algorithm was initialized at 500 random positions within the unit cell, and the number of times it converged to the global minimum was recorded. 
 
-For an initial picture of the energy landscape, it was plotted over the entire grid. From this, the approximate position of the global minimum could be identified for further comparison and analysis. Next, we applied local search using \texttt{SciPy}, specifically L-BFGS-B, to investigate the performance of regular gradient-based optimization on this energy landscape \cite{2020SciPy-NMeth}. The algorithm was initialized at 500 random positions within the unit cell, and the number of times it converged to the global minimum was recorded. 
-
-Next, Bayesian Optimization (BO) with Gaussian Processes (GPs) was employed to model the energy landscape and search for the global minimum. The BO process began with an initial set of 5 random samples from the ($x, y$) domain, which were used to train the GP model. The GP utilized a Radial Basis Function (RBF) kernel combined with a bias kernel to capture the underlying structure of the energy landscape. This was implemented using the \texttt{GPy} library \cite{gpy2014}. For the length scale hyperparameter, a Gamma prior with shape 2.0 and scale 1.0 was used, while for the variance, a Gamma prior with shape 2.0 and scale equal to half the variance of the grid energies was used. For each BO iteration, the Lower Confidence Bound (LCB) acquisition function was employed to select the next sampling point, defined as
+Next, Bayesian Optimization (BO) with Gaussian Processes (GPs) was employed to model the energy landscape and search for the global minimum. %The BO process began with an initial set of 5 random samples from the ($x, y$) domain, which were used to train the GP model. 
+The GP utilized a Radial Basis Function (RBF) kernel combined with a bias kernel to capture the underlying structure of the energy landscape, implemented using \texttt{GPy} \cite{gpy2014}. From analyzing the energy landscape, local extremes were typically separated by approximately 1--2\,Å in both directions. Therefore, the length scale hyperparameter of the RBF kernel, which represents the characteristic width of features in the energy landscape, was initialized to a Gamma prior with shape 2.0 and scale 1.0, see Figure~\ref{fig:priors} below \cite{duvenaud_2014}. The variance hyperparameter, which controls the overall variability of the function, was initialized to a Gamma prior with shape 2.0 and scale equal to half the variance of the grid energies. For the bias kernel, the variance hyperparameter was initialized to a Gamma prior with mean equal to one-tenth of the variance of the grid energies to account for any constant offset in the energy landscape but with less influence than the RBF kernel.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth, trim={0.5cm, 0.5cm, 0.5cm, 0.5cm}, clip]{figs/hyperparameter_priors.pdf}
+    \caption{Priors for the length scale and variance hyperparameters of the RBF kernel and the variance hyperparameter of the bias kernel used in the GP model.}
+    \label{fig:priors}
+\end{figure}
+\vspace{-0.5cm}
+For each BO iteration, the Lower Confidence Bound (LCB) acquisition function was employed to select the next sampling point, defined as
 \begin{equation}
     \text{LCB} \equiv A(x, y) = -\mu(x, y) + \beta \sigma(x, y),
 \end{equation}
@@ -66,38 +69,34 @@ Finally, a linear transition path between the global minimum and a local minimum
 \begin{equation}
     \bm{r}(\lambda) = \bm{r}_\text{start} + \lambda (\bm{r}_\text{end} - \bm{r}_\text{start}), \quad \lambda \in [0, 1],
 \end{equation}
-where $\bm{r}_\text{start}$ and $\bm{r}_\text{end}$ are the position vectors of the global and local minima, respectively. The energy along this path was computed using both the BO-GP model and a general GP model trained on a larger set of 200 random samples from the grid, using seven initial samples, including $\bm{r}_\text{start}$ and $\bm{r}_\text{end}$. To ensure a general model, $\beta$ was increased to $\beta = 10^6$ in order to prioritize exploration during sampling. For the latter, the same kernel and hyperparameter priors as in the BO-GP model were used. For the latter model, the RMSE was calculated as a function of the number of training samples to evaluate its performance. Ultimately, the energy profiles along the transition path from both models were compared to the target energy profile computed using EMT.
-
+where $\bm{r}_\text{start}$ and $\bm{r}_\text{end}$ are the position vectors of the global and local minima, respectively. The energy along this path was computed using both the BO-GP model and a general GP model trained on a larger set of 200 random samples from the grid, using seven initial samples, including $\bm{r}_\text{start}$ and $\bm{r}_\text{end}$. To ensure a general model, $\beta$ was increased to $\beta = 10^6$ in order to prioritize exploration during sampling. The same kernel and hyperparameter priors as in the BO-GP model were used. For the latter model, the RMSE was calculated as a function of the number of training samples to evaluate its performance. Ultimately, the energy profiles along the transition path from both models were compared to the target energy profile computed using EMT.
+\vspace{-0.5cm}
 \section{Results}
-The left panel of Figure~\ref{fig:energysurface} shows the potential energy surface $E(x,y)$ of the Au ad-atom evaluated on the $145 \times 833$ grid over the primitive cell with the global minimum marked with a blue star.
-The energy varies between roughly $7.05$ and $8.1$~eV, with several local minimas and maximas in a reoccuring pattern. The pattern breaks for $x \lesssim 5$, where the global extremes appear. The global minima is located at $(3.26, 0.72)$ with an energy of $E_\text{min} = 7.0783$\,eV. The region around the global minimum is rather small as it is narrow in $x$ and moderately extended in $y$. 
-
-The right panel displays the energy surface with the 15 trajectories of the L-BFGS-B local optimization algorithm added on top. It shows that the gradient decent works as intended since they move towards the lowest minimum close to the starting position.
+The left panel of Figure~\ref{fig:energysurface} shows the potential energy surface $E(x,y)$ of the Au ad-atom evaluated on the $145 \times 833$ grid over the primitive cell. The energy varies between roughly $7.05$ and $8.15$~eV, with several local minimas and maximas in a reoccurring pattern. The pattern breaks for $x \lesssim 5$, where the global extremes appear. The global minima is located at $(3.26, 0.72)$ with an energy of $E_\text{min} = 7.075$\,eV. The region around the global minimum is rather small as it is narrow in $x$ and moderately extended in $y$. The right panel of Figure~\ref{fig:energysurface} shows 15 trajectories of the local optimization algorithm initialized at 500 random positions over the PES grid. The squares mark the starting positions and the diamonds mark the end positions of the optimizations. Out of the 500 runs, only 67 converged to the global minimum, indicating that regular gradient-based optimization struggles to find the global minimum from most starting positions due to the complex landscape with many local minima.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.99\textwidth, trim={0.5cm, 0.8cm, 0.7cm, 0.5cm}]{figs/energy_surface_with_LBOS_trajectories.pdf}
-    \caption{Left: Potential energy surface of the Au ad-atom evaluated on the $145 \times 833$ grid over the primitive cell. Right: 15 trajectories of the L-BFGS-B local optimization algorithm initialized at 500 random positions over the PES grid. The blue star marks the global minimum.}
+    \caption{Left: Potential energy surface of the Au ad-atom evaluated on the $145 \times 833$ grid over the primitive cell. Right: 15 trajectories of the L-BFGS-B local optimization algorithm initialized at 500 random positions over the PES grid. The squares mark the starting positions and the diamonds mark the end positions of the optimizations.}
     \label{fig:energysurface}
 \end{figure}
-Something about task 2...
+\vspace{-0.5cm}
+Figure~\ref{fig:different_betas} shows, for each value of $\beta$, the energy of the sampled position $(x,y)$ at each Bayesian optimization iteration. The dashed horizontal line marks the global minimum energy obtained from the full PES. For all $\beta$ values that manage to locate the global minimum, the model reaches this energy level relatively early in the run, but then leaves the minimum again and explores other regions of the energy landscape before eventually returning to the global minimum and converging there.
 
-Figure~\ref{fig:different_betas} shows, for each value of $\beta$, the energy of the sampled position $(x,y)$ at each Bayesian optimisation iteration. The dashed horizontal line marks the global minimum energy obtained from the full PES. For all $\beta$ values that manage to locate the global minimum, the model reaches this energy level relatively early in the run, but then leaves the minimum again and explores other regions of the energy landscape before eventually returning to the global minimum and converging there.
-
-Figure~Y shows, for each value of $\beta$, the energy of the sampled position $(x,y)$ at each Bayesian optimisation iteration. The dashed horizontal line marks the global minimum energy obtained from the full PES. For $\beta = 0.5$ the sampled energy settles at a higher value and remains there, indicating that the optimisation has become trapped in a local minimum. For $\beta = 1$ and $\beta = 2$ the sampled energy reaches the global minimum after about 15 iterations and then stays at this level for the remainder of the run, which indicates rapid and stable convergence. For $\beta = 3$, the optimazation reaches the global minima several times, staying there for a few iterations, before moving away again not fully converging. For $\beta = 5$ the global minimum is visited once but the sampled energy increases again and does not return to this level within the 50 iterations, while for $\beta = 10$ it is not reached at all.
+Figure~Y shows, for each value of $\beta$, the energy of the sampled position $(x,y)$ at each Bayesian optimization iteration. The dashed horizontal line marks the global minimum energy obtained from the full PES. For $\beta = 0.5$ the sampled energy settles at a higher value and remains there, indicating that the optimization has become trapped in a local minimum. For $\beta = 1$ and $\beta = 2$ the sampled energy reaches the global minimum after about 15 iterations and then stays at this level for the remainder of the run, which indicates rapid and stable convergence. For $\beta = 3$, the optimization reaches the global minima several times, staying there for a few iterations, before moving away again not fully converging. For $\beta = 5$ the global minimum is visited once but the sampled energy increases again and does not return to this level within the 50 iterations, while for $\beta = 10$ it is not reached at all.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.99\textwidth]{figs/LBOS_energy_convergence.pdf}
-    \caption{The energy of the sampled position $(x,y)$ at each Bayesian optimisation iteration for different values of $\beta$. The dashed horizontal line marks the global minimum energy obtained from the full PES.}
+    \includegraphics[width=0.99\textwidth, trim={0.5cm, 0.5cm, 0.5cm, 0.5cm}, clip]{figs/LBOS_energy_convergence.pdf}
+    \caption{The energy of the sampled position $(x,y)$ at each BO iteration for different values of $\beta$. The dashed horizontal line marks the global minimum energy.}
     \label{fig:different_betas}
 \end{figure}
-
+\vspace{-0.5cm}
 Figure~\ref{fig:GP_analysis} illustrates the final BO GP model for the optimal $\beta = 2$, chosen from Figure \ref{fig:different_betas}. The leftmost panel shows the predicted mean energy over the domain together with starting and sampled positions, and the known global minimum. Most sampled positions lie in low energy regions, with a dense cluster in the well that contains the global minimum. The middle panel shows the predictive standard deviation (uncertainty) $\sigma$ with the same data points. The uncertainty is small in areas that contain many sampled positions, generally around the minimas (especially the global minimum), and larger in regions that have not been visited. The right panel displays the value of the LCB acquisition function for the same model. It basically shows the opposite of the uncertainty. High acquisition values occur in the low energy region surrounding the minimas where the data has been, and low where it has not.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.99\textwidth, trim={1.2cm, 1.8cm, 1.7cm, 1cm}, clip]{figs/LBOS_GP_model_analysis.pdf}
-    \caption{Left: . Center: . Right: .}
+    \caption{From left to right: Predicted mean energy of the final BO GP model, predictive standard deviation, and LCB acquisition function values with sampled positions over the domain. Green squares mark the initial samples, red circles mark the samples added during BO, and the blue star marks the global minimum.}
     \label{fig:GP_analysis}
 \end{figure}
 
@@ -105,7 +104,8 @@ Figure~\ref{fig:RMSE_vs_samples} shows the root mean square error (RMSE) of the 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{figs/LBOS_RMSE_vs_samples.pdf}
+    \includegraphics[width=0.8\textwidth, trim={0.45cm, 0.45cm, 0.45cm, 0.45cm}, clip]{figs/LBOS_RMSE_vs_samples.pdf}
+    \vspace{-0.3cm}
     \caption{RMSE for the general model as a function of the number of training samples.}
     \label{fig:RMSE_vs_samples}
 \end{figure}
@@ -114,7 +114,7 @@ Figure~\ref{fig:transition_path_comparison} compares the energy along the linear
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{figs/LBOS_energy_along_path.pdf}
+    \includegraphics[width=0.8\textwidth, trim={0.45cm, 0.45cm, 0.45cm, 0.45cm}, clip]{figs/LBOS_energy_along_path.pdf}
     \caption{Comparison of the energy along the linear transition path between the global minimum and the local energy minimum around $(11, 2.1)$ for the BO GP model, the general GP model, and the target energy computed with EMT.}
     \label{fig:transition_path_comparison}
 \end{figure}
