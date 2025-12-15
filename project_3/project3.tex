@@ -35,8 +35,41 @@ Oscar Stommendal\\
 In 1894, Sir Francis Galton introduced the Galton board -- a device that allows beads to fall through a series of pins, resulting in a binomial distribution of beads in the bottom compartments. However, if the number of rows and beads is sufficiently large, the distribution approaches a normal distribution, and the board thus serves as a physical demonstration of the Central Limit Theorem. About 50 years later, Alan Turing presented his paper ``Computing Machinery and Intelligence'', where he addressed the question ``\textit{Can machines think?}'' -- often considered as the birth of artificial intelligence. Today, of course, AI is a thriving field of research, with applications in a wide range of areas. The Galton board on the other hand, has not seen as much development since its inception. In this project however, we will explore a variant of the Galton board, where the board is placed on a rocking ship. This introduces an additional layer of complexity to the problem, as the rocking motion of the ship affects the trajectory of the beads as they fall through the pins. Using Approximate Bayesian Computation (ABC) and machine learning, we will attempt to infer the parameters governing the rocking motion of the ship based on observed data from the rocking Galton board.
 
 \section{Theory}
+This section gives a brief background on Bayesian inference, Approximate Bayesian Computation (ABC) and the use of neural networks (NN) in inverse problems.
+
+\subsection{Bayesian Inference with Latent Variables}
+In Bayesian inference, the starting point is a prior distribution $\pi(\theta)$ for the unknown parameter $\theta$ and a model for how data $y$ are generated \cite{course_book}. After observing data, the information is updated through the posterior distribution
+\begin{equation}
+    p(\theta \mid y) \propto p(y \mid \theta)\pi(\theta).
+\end{equation}
+
+Many models include an additional unobserved quantity $z$, often called a latent variable. In that case, the likelihood can be written as
+\begin{equation}
+    p(y \mid \theta) = \int p(y \mid \theta, z)\pi(z)\,\mathrm{d}z,
+\end{equation}
+where the latent variable $z$ is not of primary interest and is conceptually integrated out \cite{course_book}.
+
+\subsection{Approximate Bayesian Computation (ABC)}
+Approximate Bayesian Computation (ABC) is used when the likelihood $p(y \mid \theta)$ is not available in closed form but it is possible to simulate synthetic data from the model \cite{course_book}. Instead of evaluating the likelihood directly, simulated data $y^\ast$ are compared to the observed data $y_{\text{obs}}$ through summary statistics $s(y)$ and a distance measure $\rho\big(s(y^\ast), s(y_{\text{obs}})\big)$.
+
+In simple rejection ABC, parameters $\theta^\ast$ are drawn from the prior, data $y^\ast$ are simulated, and $\theta^\ast$ is accepted if
+\begin{equation}
+    \rho\big(s(y^\ast), s(y_{\text{obs}})\big) \le \varepsilon,
+\end{equation}
+for a chosen tolerance $\varepsilon$ \cite{course_book}. The accepted values of $\theta^\ast$ then form a sample from an approximate posterior distribution. A smaller tolerance gives a better approximation but also fewer accepted simulations.
+
+\subsection{Neural networks (NN) for inverse mapping and proposals}
+In many simulation-based models there is a forward mapping from parameters and possibly latent variables to data, often written as $(\theta, z) \mapsto y$ \cite{course_book}. Neural networks (NN) provide flexible function approximators that can be trained on simulated examples to learn relationships between such quantities. Given a collection of simulated triples $(\theta_i, z_i, y_i)$, an NN can be trained in a supervised way to predict parameters or latent variables from data. This can be written in compact form as
+\[
+(\hat{\theta}, \hat{z}) = I_{\mathrm{NN}}(y) \, ,
+\]
+where $I_{\mathrm{NN}}$ denotes a trained NN.
+
+Such predictions can be combined with ABC by using them to construct proposal distributions that are concentrated around the machine learning estimates \cite{course_book}. A distribution $g(\theta \mid \hat{\theta})$ can be used when proposing new values of $\theta$, and in a similar way a distribution $g(z \mid \hat{z})$ can be used when proposing values of a latent variable $z$. These proposals focus simulations in regions of parameter space that are more compatible with the observed data, while ABC still provides a sample based representation of the remaining uncertainty in the parameters of interest.
 
 \section{Methodology}
+The hidden layer(s) use a ReLU activation function, which introduces non-linearity while avoiding saturation effects that are common for sigmoidal activations. This is a standard choice that leads to stable and efficient training for regression problems of this type.
+
 
 \section{Results}
 
