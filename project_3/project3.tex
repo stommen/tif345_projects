@@ -32,7 +32,7 @@ Oscar Stommendal\\
 % \end{center}
 \vspace{-1.5cm}
 \section{Introduction}
-In 1894, Sir Francis Galton introduced the Galton board -- a device that allows beads to fall through a series of pins, resulting in a binomial distribution of beads in the bottom compartments. However, if the number of rows and beads is sufficiently large, the distribution approaches a normal distribution, and the board thus serves as a physical demonstration of the Central Limit Theorem. About 50 years later, Alan Turing presented his paper ``Computing Machinery and Intelligence'', where he addressed the question ``\textit{Can machines think?}'' -- often considered as the birth of artificial intelligence. Today, of course, AI is a thriving field of research, with applications in a wide range of areas. The Galton board on the other hand, has not seen as much development since its inception. In this project however, we will explore a variant of the Galton board, where the board is placed on a rocking ship. This introduces an additional layer of complexity to the problem, as the rocking motion of the ship affects the trajectory of the beads as they fall through the pins. Using Approximate Bayesian Computation (ABC) and machine learning, we will attempt to infer the parameters governing the rocking motion of the ship based on observed data from the rocking Galton board.
+In 1894, Sir Francis Galton introduced the Galton board -- a device that allows beads to fall through a series of pins, resulting in a binomial distribution of beads in the bottom compartments \cite{Galton1894NaturalInheritance}. However, if the number of rows and beads is sufficiently large, the distribution approaches a normal distribution, and the board thus serves as a physical demonstration of the Central Limit Theorem. About 50 years later, Alan Turing presented his paper ``Computing Machinery and Intelligence'', where he addressed the question ``\textit{Can machines think?}'' -- often considered as the birth of artificial intelligence \cite{IBMHistoryAI}. Today, of course, AI is a thriving field of research, with applications in a wide range of areas. The Galton board on the other hand, has not seen as much development since its inception. In this project however, we will explore a variant of the Galton board, where the board is placed on a rocking ship. This introduces an additional layer of complexity to the problem, as the rocking motion of the ship affects the trajectory of the beads as they fall through the pins. Using Approximate Bayesian Computation (ABC) and machine learning, we will attempt to infer the parameters governing the rocking motion of the ship based on observed data from the rocking Galton board.
 
 \section{Theory}
 This section gives a brief background on Bayesian inference, Approximate Bayesian Computation (ABC) and the use of neural networks (NN) in inverse problems.
@@ -68,8 +68,12 @@ where $I_{\mathrm{NN}}$ denotes a trained NN.
 Such predictions can be combined with ABC by using them to construct proposal distributions that are concentrated around the machine learning estimates \cite{course_book}. A distribution $g(\theta \mid \hat{\theta})$ can be used when proposing new values of $\theta$, and in a similar way a distribution $g(z \mid \hat{z})$ can be used when proposing values of a latent variable $z$. These proposals focus simulations in regions of parameter space that are more compatible with the observed data, while ABC still provides a sample based representation of the remaining uncertainty in the parameters of interest.
 
 \section{Methodology}
-The hidden layer(s) use a ReLU activation function, which introduces non-linearity while avoiding saturation effects that are common for sigmoidal activations. This is a standard choice that leads to stable and efficient training for regression problems of this type.
-
+% The hidden layer(s) use a ReLU activation function, which introduces non-linearity while avoiding saturation effects that are common for sigmoidal activations. This is a standard choice that leads to stable and efficient training for regression problems of this type.
+In this project we consider a Galton board with $31$ rows of pegs, and hence $32$ compartments at the bottom. The beads are known to have a special kind of inertia, described by the hypothesis that a bead falling to the right/left at a peg will begin to spin clockwise/counter-clockwise. This spin will affect the trajectory of the bead at the next peg, making it more likely to fall in the same direction as before. The strength of this effect is governed by the bias parameter $\alpha$. Furthermore, we assume that earlier moves (more than one peg earlier) have no effect on the current move, and that the bias is zero at the first peg. The main goal of the project is to infer $\alpha$ from a series of observations of the final distribution of beads in the bottom compartments. However, since the board is placed on a rocking ship, there is an additional latent variable $s$ that affects the trajectory of the beads. This represents the current tilt of the ship, and varies uncontrollably from experiment to experiment. According to this model, the probability of a bead falling to the right (left) at a peg $P_+$ ($P_-$) is given by
+\begin{equation}
+    P_\pm = 0.5 \pm (\alpha M + s)\,,
+\end{equation}
+where $M = 0$ at the first peg, and $M = +(-) 0.5$ if the bead previously fell to the right (left). From prior knowledge, we assume that $\alpha \sim \mathcal{U}(0, 0.5)$ and $s \sim \mathcal{U}(-0.25, 0.25)$ and that the beads fall independently of each other.
 
 \section{Results}
 
@@ -77,7 +81,21 @@ The hidden layer(s) use a ReLU activation function, which introduces non-lineari
     \centering
     \includegraphics[width=0.99\textwidth]{figs/dalton_sim_comp.pdf}
     \caption{An example figure showing the results of our simulations.}
-    \label{fig:example}
+    \label{fig:dalton_sim}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{figs/dalton_sim_NN_comp.pdf}
+    \caption{An example figure showing the results of our simulations.}
+    \label{fig:dalton_sim_NN}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.99\textwidth]{figs/dalton_ABC_transformation_estimates.pdf}
+    \caption{An example figure showing the results of our simulations.}
+    \label{fig:trans}
 \end{figure}
 
 \section{Discussion}
