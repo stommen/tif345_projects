@@ -27,78 +27,74 @@ Oscar Stommendal\\
 }
 \date{\today}
 \maketitle
-% \begin{center}
-%     \textbf{Abstract}
-% \end{center}
 \vspace{-1.5cm}
 \section{Introduction}
 In 1894, Sir Francis Galton introduced the Galton board -- a device that allows beads to fall through a series of pins, resulting in a binomial distribution of beads in the bottom compartments \cite{Galton1894NaturalInheritance}. However, if the number of rows and beads is sufficiently large, the distribution approaches a normal distribution, and the board thus serves as a physical demonstration of the Central Limit Theorem. About 50 years later, Alan Turing presented his paper ``Computing Machinery and Intelligence'', where he addressed the question ``\textit{Can machines think?}'' -- often considered as the birth of artificial intelligence \cite{IBMHistoryAI}. Today, of course, AI is a thriving field of research, with applications in a wide range of areas. The Galton board on the other hand, has not seen as much development since its inception. In this project however, we will explore a variant of the Galton board, where the board is placed on a rocking ship. This introduces an additional layer of complexity to the problem, as the rocking motion of the ship affects the trajectory of the beads as they fall through the pins. Using Approximate Bayesian Computation (ABC) and machine learning, we will attempt to infer the parameters governing the rocking motion of the ship based on observed data from the rocking Galton board.
 
-\section{Theory}
-This section gives a brief background on Bayesian inference, Approximate Bayesian Computation (ABC) and the use of neural networks (NN) in inverse problems.
-
-\subsection{Bayesian Inference with Latent Variables}
-In Bayesian inference, the starting point is a prior distribution $\pi(\theta)$ for the unknown parameter $\theta$ and a model for how data $y$ are generated \cite{course_book}. After observing data, the information is updated through the posterior distribution
-\begin{equation}
-    p(\theta \mid y) \propto p(y \mid \theta)\pi(\theta).
-\end{equation}
-
-Many models include an additional unobserved quantity $z$, often called a latent variable. In that case, the likelihood can be written as
-\begin{equation}
-    p(y \mid \theta) = \int p(y \mid \theta, z)\pi(z)\,\mathrm{d}z,
-\end{equation}
-where the latent variable $z$ is not of primary interest and is conceptually integrated out \cite{course_book}.
-
-\subsection{Approximate Bayesian Computation (ABC)}
-Approximate Bayesian Computation (ABC) is used when the likelihood $p(y \mid \theta)$ is not available in closed form but it is possible to simulate synthetic data from the model \cite{course_book}. Instead of evaluating the likelihood directly, simulated data $y^\ast$ are compared to the observed data $y_{\text{obs}}$ through summary statistics $s(y)$ and a distance measure $\rho\big(s(y^\ast), s(y_{\text{obs}})\big)$.
-
-In simple rejection ABC, parameters $\theta^\ast$ are drawn from the prior, data $y^\ast$ are simulated, and $\theta^\ast$ is accepted if
-\begin{equation}
-    \rho\big(s(y^\ast), s(y_{\text{obs}})\big) \le \varepsilon,
-\end{equation}
-for a chosen tolerance $\varepsilon$ \cite{course_book}. The accepted values of $\theta^\ast$ then form a sample from an approximate posterior distribution. A smaller tolerance gives a better approximation but also fewer accepted simulations.
-
-\subsection{Neural networks (NN) for inverse mapping and proposals}
-In many simulation-based models there is a forward mapping from parameters and possibly latent variables to data, often written as $(\theta, z) \mapsto y$ \cite{course_book}. Neural networks (NN) provide flexible function approximators that can be trained on simulated examples to learn relationships between such quantities. Given a collection of simulated triples $(\theta_i, z_i, y_i)$, an NN can be trained in a supervised way to predict parameters or latent variables from data. This can be written in compact form as
-\[
-(\hat{\theta}, \hat{z}) = I_{\mathrm{NN}}(y) \, ,
-\]
-where $I_{\mathrm{NN}}$ denotes a trained NN.
-
-Such predictions can be combined with ABC by using them to construct proposal distributions that are concentrated around the machine learning estimates \cite{course_book}. A distribution $g(\theta \mid \hat{\theta})$ can be used when proposing new values of $\theta$, and in a similar way a distribution $g(z \mid \hat{z})$ can be used when proposing values of a latent variable $z$. These proposals focus simulations in regions of parameter space that are more compatible with the observed data, while ABC still provides a sample based representation of the remaining uncertainty in the parameters of interest.
-
-\section{Methodology}
-% The hidden layer(s) use a ReLU activation function, which introduces non-linearity while avoiding saturation effects that are common for sigmoidal activations. This is a standard choice that leads to stable and efficient training for regression problems of this type.
+\section{Theoretical Model}
 In this project we consider a Galton board with $31$ rows of pegs, and hence $32$ compartments at the bottom. The beads are known to have a special kind of inertia, described by the hypothesis that a bead falling to the right/left at a peg will begin to spin clockwise/counter-clockwise. This spin will affect the trajectory of the bead at the next peg, making it more likely to fall in the same direction as before. The strength of this effect is governed by the bias parameter $\alpha$. Furthermore, we assume that earlier moves (more than one peg earlier) have no effect on the current move, and that the bias is zero at the first peg. The main goal of the project is to infer $\alpha$ from a series of observations of the final distribution of beads in the bottom compartments. However, since the board is placed on a rocking ship, there is an additional latent variable $s$ that affects the trajectory of the beads. This represents the current tilt of the ship, and varies uncontrollably from experiment to experiment. According to this model, the probability of a bead falling to the right (left) at a peg $P_+$ ($P_-$) is given by
 \begin{equation}
     P_\pm = 0.5 \pm (\alpha M + s)\,,
 \end{equation}
-where $M = 0$ at the first peg, and $M = +(-) 0.5$ if the bead previously fell to the right (left). From prior knowledge, we assume that $\alpha \sim \mathcal{U}(0, 0.5)$ and $s \sim \mathcal{U}(-0.25, 0.25)$ and that the beads fall independently of each other.
+where $M = 0$ at the first peg, and $M = \pm 0.5$ if the bead previously fell to the right ($+$) or left ($-$). From prior knowledge, we assume that $\alpha \sim \mathcal{U}(0, 0.5)$ and $s \sim \mathcal{U}(-0.25, 0.25)$ and that the beads fall independently of each other.
 
+\section{Methodology}
+First, a Galton board simulator was implemented in Python, following the model described in the previous section. This was used to generate a large dataset $\mathcal{D}$ of simulated examples $\mathcal{D} = (\alpha_i, s_i, y_i)$, where $y_i$ are the counts of beads in each compartment after simulation $i$. Next, standard Approximate Bayesian Computation (ABC) using rejection sampling was implemented. For the considered model, the likelihood cannot be written explicitly since the observed data depend on an unobserved (latent) variable $s$. Evaluating the likelihood would require integrating over all possible $s$, making an analytical approach impractical. Conveniently, instead of evaluating the likelihood directly, ABC uses model simulations to approximate the posterior distribution. 
+
+ABC starts by drawing parameters $\alpha^\ast$ and $s^\ast$ from their previously outlined prior distributions. Then, data $y^\ast$ is generated using the Galton board simulator with the proposed parameters. This is then compared to the observed data $y_{\text{obs}}$ using the summary statistic $s(y)$. In our case, the observed data was generated using known parameters $\alpha_{\text{true}} = 0.25$ and $s_{\text{true}} = 0.1$. Moreover, two kinds of summary statistics were used, the first moment only (i.e., the mean) or the first four moments (i.e., the mean, variance, skewness, and kurtosis). The distance $\rho$ between the summary statistics of the synthetic and observed data was measured using the Euclidean distance $\rho(s(y^\ast) - s(y_{\text{obs}}))$. For the next step, the proposed parameters $\alpha^\ast$ and $s^\ast$ were accepted with probability
+\begin{equation}
+    P_{\text{accept}} = K(\rho\big(s(y^\ast), s(y_{\text{obs}})\big) / h),
+\end{equation}
+where $K$ is a kernel function and $h$ is the kernel size, controlling the number of accepted proposals. The kernel function adds a smooth acceptance criterion, where proposals that are closer to the observed data have a higher probability of being accepted. The kernel size $h$ controls the trade-off between accuracy and computational efficiency, as a smaller $h$ leads to a better approximation of the posterior but also fewer accepted proposals. In our case, we used a total of $100\,000$ samples with three different kernel sizes, corresponding to accepting approximately $1\%$, $5\%$, and $10\%$ of the proposals. Regarding the kernel function, we opted for the Gaussian kernel in order to use all samples and weigh them according to their distance to the observed data, rather than using a hard cutoff like other kernel functions (e.g., the uniform kernel). This approach allowed us to retain more information from the simulations and provided a smoother approximation of the posterior distribution.
+
+To improve the efficiency of the ABC procedure, we also implemented a variant that uses a neural network (NN) to propose values of $s$. This will provide more accurate proposals for the latent variable, and to some extent ``eliminate'' this from the inference problem. Using the dataset $\mathcal{D}$ of simulated examples, a feed-forward NN was trained to learn the inverse mapping from data $y$ to the latent variable $s$ (and $\alpha$). 
+
+The network architecture consisted of an input layer with $32$ nodes (one for each compartment), a hidden layer with $100$ nodes, and an output layer with two nodes representing the predicted value of $s$ and $\alpha$. Due to the non-linear relationship between the data and the parameters, the hidden layer used a ReLU activation function, which introduces non-linearity while being more efficient than sigmoidal activations by avoiding vanishing gradients \cite{nwankpa2018activationfunctionscomparisontrends}. The network was trained using the Adam optimizer and mean squared error (MSE) loss function for maximum $100$ epochs with a batch size of $256$. To evaluate the performance of the trained network, the dataset $\mathcal{D}$ was split into training and validation sets, with $90\%$ of the data used for training and $10\%$ for validation. The training and validation losses were monitored during training to ensure that the network was learning effectively without overfitting.
+
+Once trained, the NN was used to predict $\hat{s}$ based on the observed data $y_{\text{obs}}$. For each proposed $\alpha^\ast$ (still drawn from its prior), a proposal for $s^\ast$ was drawn from a normal distribution centered at $\hat{s}$ with a standard deviation equal to the NN's root mean squared error on $s$. This approach focuses the proposals for $s$ around the values that are more compatible with the observed data, improving efficiency. Regarding the rest of the ABC procedure, we opted for the lower acceptance rate together with all four moments as summary statistics, as this combination gave the best results.
+
+Finally, the most likely value of $\alpha$ given the observed data $y_\text{obs}$ was inferred. This was done by running the ABC procedure multiple times, where the resulting posterior samples of $\alpha$ after each run were used as prior for the next run. This iterative approach allows for progressively refining the estimates of $\alpha$ based on the observed data, leading to more accurate posterior distributions. The process was repeated for a total of $100$ iterations, each generating $1000$ samples, again using the NN proposals for $s$, low acceptance ratio, and all four moments as summary statistics.
+\vspace{-0.3cm}
 \section{Results}
-Figure~\ref{fig:dalton_sim} and Figure~\ref{fig:dalton_sim_NN} illustrate the behavior of the ABC procedure on a single synthetic data set. A reference data set is first generated by simulating the model at fixed, ``true'' parameter values $(\alpha^* = 0.25, s^* = 0.10)$.
+Table \ref{tab:summary_stats_comparison} summarizes the posterior means ($\mu$) and standard deviations ($\sigma$) of $\alpha$ and $s$ for the different choices of summary statistics and acceptance rates. The average standard deviation of the simulated data using the accepted samples, denoted as $\sigma_y$, is also included as a measure of how well the model fits the observed data. As seen in the table, using all four moments as summary statistics generally leads to better estimates of both $\alpha$ and $s$, especially at lower acceptance rates. The average standard deviation $\sigma_y$ also decreases with more intricate summary statistics and lower acceptance rates, indicating a better fit to the observed data.
+\vspace{-0.3cm}
+\begin{table}[H]
+    \centering
+    \caption{Comparison of parameter posteriors for different choices of summary statistics and acceptance rates. The best estimates are highlighted in bold. $\sigma_y$ is the average standard deviation of the simulated data using the accepted samples.}
+    \vspace{0.1cm}
+    \begin{tabular}{c c c c c c c}
+        \toprule
+        \textbf{Summary statistics} & \textbf{Acceptance (\%)} & $\bm{\mu_\alpha}$ & $\bm{\sigma_\alpha}$ & $\bm{\mu_s}$ & $\bm{\sigma_s}$ & $\bm{\sigma_y}$ \\
+        \midrule
+        Mean only & $10.8$ & $0.2218$ & $0.1418$ & $0.1039$ & $0.0443$ & $18.1$ \\
+        Mean only & $6.31$ & $0.2228$ & $0.1441$ & $0.1098$ & $0.0308$ & $12.2$ \\
+        Mean only & $1.54$ & $0.2200$ & $0.1416$ & $0.1099$ & $0.0203$ & \bm{$6.9$} \\
+        All & $10.6$ & $0.2219$ & $0.1045$ & \bm{$0.0979$} & $0.0562$ & $24.3$ \\
+        All & $4.84$ & $0.2158$ & $0.0744$ & $0.1028$ & $0.0343$ & $16.9$ \\
+        All & $1.08$ & \bm{$0.2481$} & \bm{$0.0406$} & $0.1045$ & \bm{$0.0169$} & $9.2$ \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:summary_stats_comparison}
+\end{table}
 
-Figure~\ref{fig:dalton_sim} compares two choices of summary statistics for this reference data set. In both cases the ABC kernel bandwidth is $h = 0.1$, with uniform priors $\alpha \sim U(0,0.5)$ and $s \sim U(-0.25,0.25)$. The left panels use only the mean (center of mass) of the bead distribution as summary, while the right panels use the mean, variance, skewness and kurtosis.
+Figure~\ref{fig:dalton_sim} and \ref{fig:dalton_sim_NN} illustrate ABC's performance on the single synthetic data set generated using $(\alpha_\text{true}, s_\text{true}) = (0.25, 0.10)$. Figure~\ref{fig:dalton_sim} compares two choices of summary statistics. In both cases, the kernel size was chosen such that $\approx 1\%$ of the proposals are accepted. The left panels use only the mean as summary, while the right panels use the mean, variance, skewness and kurtosis. The top left of Figure~\ref{fig:dalton_sim} shows a narrow, slightly negatively correlated band that spans most of the prior range in $\alpha$, while being restricted to $s \approx 0.07$--$0.15$. The more intricate summary in the top right instead shows a more compact region around the true parameter values. The distribution of $s$ is similar, but $\alpha$ is now essentially normally distributed around the true value. The lower panels show that both choices give reasonable posterior predictive histograms, with the four-moment summary giving slightly smaller $\pm 1\sigma$ bands near the peak.
 
-The top left plot of the figure shows a very narrow, slightly negatively correlated band that spans most of the prior range in $\alpha$ while being restricted to $s \approx 0.08$--$0.12$. The point $(\alpha^*, s^*)$ lies on this band, but a wide range of $\alpha$ values is still compatible with the data far from it. The more intricate summary in the top right instead shows a more compact region around $(\alpha^*, s^*)$. The distribution of $s$ is similar, but $\alpha$ goes from being almost uniform across the entire interval to being more normally distributed around the true value. The lower panels show that both choices give reasonable posterior predictive histograms, with the four-moment summary giving slightly smaller $\pm 1\sigma$ bands near the peak.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.99\textwidth]{figs/dalton_sim_comp.pdf}
-    \caption{An example figure showing the results of our simulations.}
+    \caption{ABC results for acceptance rate $\approx 1\%$ using two different summary statistics: mean only (left) and mean, variance, skewness, kurtosis (right). Top panels show the joint posterior distribution of $\alpha$ and $s$. Bottom panels show the posterior predictive histograms compared to the observed data with $\pm 1\sigma$ uncertainty bands.}
     \label{fig:dalton_sim}
 \end{figure}
 
-Figure~\ref{fig:dalton_sim_NN} shows the corresponding results when NN-based proposals are used for the latent tilt $s$. The same synthetic reference data set and true parameters are used as in Figure~\ref{fig:dalton_sim}. The left panels again use only the mean as summary, and the right panels use all four moments.
-
-With NN support, the two choices of summary statistics now give almost identical posteriors. The distribution of $s$ is very narrow and centered about $s^*$ (offset by roughly $10^{-3}$), and the posterior for $\alpha$ is clearly more concentrated around $\alpha^*$ than in Figure~\ref{fig:dalton_sim}. The posterior predictive histograms in the lower panels are practically indistinguishable for the two summary choices and display much smaller $\pm 1\sigma$ bands compared to the case without NN.
+Figure~\ref{fig:dalton_sim_NN} shows the corresponding results when NN-based proposals are used for the latent tilt $s$. With NN support, the two choices of summary statistics now give almost identical posteriors. The distribution of $s$ is very narrow and centered about $s^*$ (offset by roughly $10^{-3}$), and the posterior for $\alpha$ is clearly more concentrated around $\alpha^*$ than in Figure~\ref{fig:dalton_sim}. The posterior predictive histograms in the lower panels are practically indistinguishable for the two summary choices and display much smaller $\pm 1\sigma$ bands compared to the case without NN.
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.99\textwidth]{figs/dalton_sim_NN_comp.pdf}
-    \caption{An example figure showing the results of our simulations.}
+    \includegraphics[width=0.99\textwidth, trim={0.2cm, 0.2cm, 0.2cm, 0.2cm}, clip]{figs/dalton_ABC_NN_summary_comparison_combined.pdf}
+    \caption{The joint posterior distributions of $\alpha$ and $s$ (left) and posterior predictive histograms (middle) for ABC with NN-based proposals for $s$, four-moment summary statistics, and $\approx 1\%$ acceptance rate. The right plot shows the training and validation loss curves for the NN used to propose $s$.}
     \label{fig:dalton_sim_NN}
 \end{figure}
 
-Figure~\ref{fig:trans} shows the inference results for the given data sets from the rocking Galton board. In this case the true values of $\alpha$ and $s$ are not known. It is assumed that $\alpha$ is the same for all data sets, while $s$ can change between them. For each data set the NN is first used to obtain a proposal for $s$. An ABC run then produces a posterior for $\alpha$, which is approximated by a normal distribution and used as the prior for $\alpha$ in the next step. The left panel shows the mean estimate of $\alpha$ for each data set together with its $\pm 1\sigma_\alpha$ interval and the posterior standard deviation $\sigma_\alpha$. The estimate converges to $\approx 0.338$, and the uncertainty decreases as more data sets are included, ending at around $0.002$. The right panel displays the corresponding posterior means of $s$ for each data set. As expected, these values vary from one data set to the next, since the tilt changes between experiments.
+Figure~\ref{fig:trans} shows the results from the iterative posterior transformations to infer the most likely $\alpha$. The left panel shows the mean estimate of $\alpha$ for each posterior transformation, a $\pm 1\sigma_\alpha$ band, together with the values of $\sigma_\alpha$ on the second $y$-axis. The estimate converges to $\alpha \approx 0.330$, and the uncertainty decreases as the number of transformations increases. The right panel displays the corresponding posterior means of $s$ for each transformation. As expected, these values vary randomly, since the tilt changes uncontrollably between experiments.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.99\textwidth]{figs/dalton_ABC_transformation_estimates.pdf}
